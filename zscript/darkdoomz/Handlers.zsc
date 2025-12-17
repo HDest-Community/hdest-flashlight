@@ -1,0 +1,158 @@
+
+
+class DarkDoomZ_DataHandler : StaticEventHandler
+{
+    Array<DDZ_LightBeamInfo> Beams;
+    Array<DDZ_MountPoint> Mounts;
+
+    override void OnRegister()
+    {
+        for (int i = 0; i < AllClasses.Size(); ++i)
+        {
+            if (AllClasses[i] is 'DDZ_LightBeamInfo' && !AllClasses[i].IsAbstract())
+            {
+                Beams.Push(DDZ_LightBeamInfo(new(AllClasses[i])));
+            }
+            if (AllClasses[i] is 'DDZ_MountPoint' && !AllClasses[i].IsAbstract())
+            {
+                Mounts.Push(DDZ_MountPoint(new(AllClasses[i])));
+            }
+        }
+    }
+}
+
+class DarkDoomZ_LightHandler : EventHandler
+{
+    Array<int> BaseLightLevels;
+    private transient CVar Mode, Preset, PreGain, PostGain, MinLight, SkyMode;
+    int OldMode, OldPreset, OldPreGain, OldPostGain, OldMinLight;
+    double OldSkyMode;
+
+    override void WorldLoaded(WorldEvent e)
+    {
+        if (!ddz_lighting)
+        {
+            ThinkerIterator it = ThinkerIterator.Create("Lighting");
+            Lighting effect;
+            while (effect = Lighting(it.Next()))
+            {
+                effect.Destroy();
+            }
+        }
+
+        BaseLightLevels.Clear();
+        for (int i = 0; i < Level.Sectors.Size(); ++i)
+        {
+            BaseLightlevels.Push(Level.Sectors[i].LightLevel);
+        }
+
+        ChangeLighting();
+
+        if (e.isReopen)
+        {
+            let iterator = ThinkerIterator.Create('DarkDoomZ_Spotlight');
+            for (Thinker mo; (mo = iterator.Next());)
+            {
+                mo.Destroy();
+            }
+        }
+    }
+
+    override void WorldThingSpawned(WorldEvent e)
+    {
+        let bat = HDBattery(e.Thing);
+        if (bat)
+        {
+            bat.ItemsThatUseThis.Push("DarkDoomZ_Flashlight");
+        }
+    }
+    
+    override void UiTick()
+    {
+        EventHandler.SendNetworkEvent("UpdateLights");
+    }
+
+    override void NetworkProcess(ConsoleEvent e)
+    {
+        if (e.Name == "UpdateLights")
+        {
+            ChangeLighting();
+        }
+    }
+
+    void ChangeLighting()
+    {
+        if (level.MapName ~== "LOTSAGUN")
+        {
+            return;
+        }
+        
+        if (!Mode) { Mode = CVar.GetCvar('ddz_mode'); }
+        if (!Preset) { Preset = CVar.GetCvar('ddz_preset'); }
+        if (!PreGain) { PreGain = CVar.GetCvar('ddz_pregain'); }
+        if (!PostGain) { PostGain = CVar.GetCvar('ddz_postgain'); }
+        if (!MinLight) { MinLight = CVar.GetCvar('ddz_minlight'); }
+        if (!SkyMode) { SkyMode = CVar.GetCvar('ddz_skymode'); }
+
+        bool changed = OldMode != Mode.GetInt() || OldPreset != Preset.GetInt() || OldPreGain != PreGain.GetInt() || OldPostGain != PostGain.GetInt() || OldMinLight != MinLight.GetInt() || OldSkyMode != Skymode.GetFloat();
+
+        if (changed)
+        {
+            int baseAdjustment = 32 * Preset.GetInt();
+
+            for (int i = 0; i < BaseLightLevels.Size(); ++i)
+            {
+                int baseLevel = BaseLightLevels[i];
+                baseLevel += PreGain.GetInt();
+
+                bool IsSky = level.Sectors[i].GetTexture(0) == skyflatnum || level.Sectors[i].GetTexture(1) == skyflatnum;
+
+                int finalAdjustment = baseAdjustment;
+                if (IsSky)
+                {
+                    finalAdjustment = int(finalAdjustment * SkyMode.GetFloat());
+                }
+
+                // Link to graphing calculator depiction of different modes
+                // https://www.desmos.com/calculator/v1ni4wftcg
+                switch (Mode.GetInt())
+                {
+                    case 1: //subtract raw light level (simple fade)
+                        Level.Sectors[i].Lightlevel = baseLevel - finalAdjustment;
+                        break;
+                    case 2: //linear compression
+                        Level.Sectors[i].Lightlevel = int(baseLevel * (1.0 - finalAdjustment / 256.0));
+                        break;
+                    case 3: //clamp max brightness level
+                        Level.Sectors[i].Lightlevel = clamp(baseLevel, 0, 256 - finalAdjustment);
+                        break;
+                    case 4: //apply exponential gamma curve
+                        Level.Sectors[i].Lightlevel = int((256 - (finalAdjustment ** (finalAdjustment / 256))) * (baseLevel / 256.0) ** (1 + (finalAdjustment / (33 - (finalAdjustment / 8)))));
+                        break;
+                    case 10: //DarkDoom Lite (fixed subtract mode)
+                        Level.Sectors[i].Lightlevel = baseLevel - 96;
+                        break;
+                    case 11: //DarkDoom Classic (fixed subtract mode)
+                        Level.Sectors[i].Lightlevel = baseLevel - 128;
+                        break;
+                    case 12: //DarkDoom Black (fixed subtract mode)
+                        Level.Sectors[i].Lightlevel = baseLevel - 256;
+                        break;
+                    default: //disable
+                        Level.Sectors[i].Lightlevel = baseLevel; //reset lightlevels
+                        break;
+                }
+
+                Level.Sectors[i].Lightlevel += PostGain.GetInt();
+                Level.Sectors[i].Lightlevel = max(Level.Sectors[i].Lightlevel, MinLight.GetInt());
+            }
+        }
+
+        OldMode = Mode.GetInt();
+        OldPreset = Preset.GetInt();
+        OldPreGain = PreGain.GetInt();
+        OldPostGain = PostGain.GetInt();
+        OldMinLight = MinLight.GetInt();
+        OldSkyMode = SkyMode.GetFloat();
+    }
+}
