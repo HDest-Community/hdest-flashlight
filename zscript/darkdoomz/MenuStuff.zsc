@@ -1,69 +1,53 @@
-class DarkDoomZ_OptionMenu : OptionMenu
-{
-    override void Init(Menu parent, OptionMenuDescriptor desc)
-    {
+class DarkDoomZ_OptionMenu : OptionMenu {
+    override void Init(Menu parent, OptionMenuDescriptor desc) {
         Super.Init(parent, desc);
         DontDim = true;
         DontBlur = true;
     }
 }
 
-class OptionMenuItemDDZFlashlightOption : OptionMenuItem
-{
+class OptionMenuItemDDZFlashlightOption : OptionMenuItem {
     DarkDoomZ_DataHandler mHandler;
     CVar mCVar;
 
-    void Init(String label, Name command)
-    {
+    void Init(String label, Name command) {
         Super.Init(label, command);
         mHandler = DarkDoomZ_DataHandler(StaticEventHandler.Find('DarkDoomZ_DataHandler'));
         mCVar = CVar.FindCVar(mAction);
     }
 
-    override int Draw(OptionMenuDescriptor desc, int y, int indent, bool selected)
-    {
+    override int Draw(OptionMenuDescriptor desc, int y, int indent, bool selected) {
         drawLabel(indent, y, selected ? OptionMenuSettings.mFontColorSelection : OptionMenuSettings.mFontColor);
 
         string text = "";
-        switch (mAction)
-        {
+        switch (mAction) {
             case 'ddz_fl_type': text = mHandler.Beams[min(mCVar.GetInt(), mHandler.Beams.Size() - 1)].GetName(); break;
             case 'ddz_fl_pos': text = mHandler.Mounts[min(mCVar.GetInt(), mHandler.Mounts.Size() - 1)].GetName(); break;
         }
-        if (text.Length() == 0)
-        {
+        if (text.Length() == 0) {
             text = "Unknown";
         }
         drawValue(indent, y, OptionMenuSettings.mFontColorValue, text);
         return indent;
     }
 
-    override bool MenuEvent (int mkey, bool fromcontroller)
-    {
+    override bool MenuEvent (int mkey, bool fromcontroller) {
         int maxIndex = 0;
-        switch (mAction)
-        {
+        switch (mAction) {
             case 'ddz_fl_type': maxIndex = mHandler.Beams.Size() - 1; break;
             case 'ddz_fl_pos': maxIndex = mHandler.Mounts.Size() - 1; break;
         }
 
         int selIndex = mCVar.GetInt();
-        if (mkey == Menu.MKEY_Left)
-        {
-            if (--selIndex < 0)
-            {
+        if (mkey == Menu.MKEY_Left) {
+            if (--selIndex < 0) {
                 selIndex = maxIndex;
             }
-        }
-        else if (mkey == Menu.MKEY_Right || mkey == Menu.MKEY_Enter)
-        {
-            if (++selIndex > maxIndex)
-            {
+        } else if (mkey == Menu.MKEY_Right || mkey == Menu.MKEY_Enter) {
+            if (++selIndex > maxIndex) {
                 selIndex = 0;
             }
-        }
-        else
-        {
+        } else {
             return Super.MenuEvent(mkey, fromcontroller);
         }
         mCVar.SetInt(selIndex);

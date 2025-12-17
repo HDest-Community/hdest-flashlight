@@ -1,29 +1,24 @@
-class DDZ_MountPoint abstract
-{
+class DDZ_MountPoint abstract {
     abstract ui string GetName();
     abstract double, double, int, double, double GetMountInfo(); // [Ace] Spring, damping, inertia, offAngle, offZ.
 }
 
-class DDZ_Handheld : DDZ_MountPoint
-{
+class DDZ_Handheld : DDZ_MountPoint {
     override string GetName() { return "Handheld"; }
     override double, double, int, double, double GetMountInfo() { return 0.25, 0.2, 4, 0, -13; }
 }
 
-class DDZ_LeftShoulder : DDZ_MountPoint
-{
+class DDZ_LeftShoulder : DDZ_MountPoint {
     override string GetName() { return "Left shoulder"; }
     override double, double, int, double, double GetMountInfo() { return 0.35, 0.75, 2, 80, -5; }
 }
 
-class DDZ_RightShoulder : DDZ_MountPoint
-{
+class DDZ_RightShoulder : DDZ_MountPoint {
     override string GetName() { return "Right shoulder"; }
     override double, double, int, double, double GetMountInfo() { return 0.35, 0.75, 2, -80, -5; }
 }
 
-class DDZ_Helmet : DDZ_MountPoint
-{
+class DDZ_Helmet : DDZ_MountPoint {
     override string GetName() { return "Helmet"; }
     override double, double, int, double, double GetMountInfo() { return 1, 1, 1, 0, 4; }
 }

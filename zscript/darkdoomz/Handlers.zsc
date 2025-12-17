@@ -1,122 +1,97 @@
 
 
-class DarkDoomZ_DataHandler : StaticEventHandler
-{
+class DarkDoomZ_DataHandler : StaticEventHandler {
     Array<DDZ_LightBeamInfo> Beams;
     Array<DDZ_MountPoint> Mounts;
 
-    override void OnRegister()
-    {
-        for (int i = 0; i < AllClasses.Size(); ++i)
-        {
-            if (AllClasses[i] is 'DDZ_LightBeamInfo' && !AllClasses[i].IsAbstract())
-            {
+    override void OnRegister() {
+        for (int i = 0; i < AllClasses.Size(); ++i) {
+            if (AllClasses[i] is 'DDZ_LightBeamInfo' && !AllClasses[i].IsAbstract()) {
                 Beams.Push(DDZ_LightBeamInfo(new(AllClasses[i])));
             }
-            if (AllClasses[i] is 'DDZ_MountPoint' && !AllClasses[i].IsAbstract())
-            {
+            if (AllClasses[i] is 'DDZ_MountPoint' && !AllClasses[i].IsAbstract()) {
                 Mounts.Push(DDZ_MountPoint(new(AllClasses[i])));
             }
         }
     }
 }
 
-class DarkDoomZ_LightHandler : EventHandler
-{
+class DarkDoomZ_LightHandler : EventHandler {
     Array<int> BaseLightLevels;
     private transient CVar Mode, Preset, PreGain, PostGain, MinLight, SkyMode;
     int OldMode, OldPreset, OldPreGain, OldPostGain, OldMinLight;
     double OldSkyMode;
 
-    override void WorldLoaded(WorldEvent e)
-    {
-        if (!ddz_lighting)
-        {
+    override void WorldLoaded(WorldEvent e) {
+        if (!ddz_lighting) {
             ThinkerIterator it = ThinkerIterator.Create("Lighting");
             Lighting effect;
-            while (effect = Lighting(it.Next()))
-            {
+            while (effect = Lighting(it.Next())) {
                 effect.Destroy();
             }
         }
 
         BaseLightLevels.Clear();
-        for (int i = 0; i < Level.Sectors.Size(); ++i)
-        {
+        for (int i = 0; i < Level.Sectors.Size(); ++i) {
             BaseLightlevels.Push(Level.Sectors[i].LightLevel);
         }
 
         ChangeLighting();
 
-        if (e.isReopen)
-        {
+        if (e.isReopen) {
             let iterator = ThinkerIterator.Create('DarkDoomZ_Spotlight');
-            for (Thinker mo; (mo = iterator.Next());)
-            {
+            for (Thinker mo; (mo = iterator.Next());) {
                 mo.Destroy();
             }
         }
     }
 
-    override void WorldThingSpawned(WorldEvent e)
-    {
+    override void WorldThingSpawned(WorldEvent e) {
         let bat = HDBattery(e.Thing);
-        if (bat)
-        {
+        if (bat) {
             bat.ItemsThatUseThis.Push("DarkDoomZ_Flashlight");
         }
     }
     
-    override void UiTick()
-    {
+    override void UiTick() {
         EventHandler.SendNetworkEvent("UpdateLights");
     }
 
-    override void NetworkProcess(ConsoleEvent e)
-    {
-        if (e.Name == "UpdateLights")
-        {
+    override void NetworkProcess(ConsoleEvent e) {
+        if (e.Name == "UpdateLights") {
             ChangeLighting();
         }
     }
 
-    void ChangeLighting()
-    {
-        if (level.MapName ~== "LOTSAGUN")
-        {
-            return;
-        }
+    void ChangeLighting() {
+        if (level.MapName ~== "LOTSAGUN") return;
         
-        if (!Mode) { Mode = CVar.GetCvar('ddz_mode'); }
-        if (!Preset) { Preset = CVar.GetCvar('ddz_preset'); }
-        if (!PreGain) { PreGain = CVar.GetCvar('ddz_pregain'); }
-        if (!PostGain) { PostGain = CVar.GetCvar('ddz_postgain'); }
-        if (!MinLight) { MinLight = CVar.GetCvar('ddz_minlight'); }
-        if (!SkyMode) { SkyMode = CVar.GetCvar('ddz_skymode'); }
+        if (!Mode)     Mode = CVar.GetCvar('ddz_mode');
+        if (!Preset)   Preset = CVar.GetCvar('ddz_preset');
+        if (!PreGain)  PreGain = CVar.GetCvar('ddz_pregain');
+        if (!PostGain) PostGain = CVar.GetCvar('ddz_postgain');
+        if (!MinLight) MinLight = CVar.GetCvar('ddz_minlight');
+        if (!SkyMode)  SkyMode = CVar.GetCvar('ddz_skymode');
 
         bool changed = OldMode != Mode.GetInt() || OldPreset != Preset.GetInt() || OldPreGain != PreGain.GetInt() || OldPostGain != PostGain.GetInt() || OldMinLight != MinLight.GetInt() || OldSkyMode != Skymode.GetFloat();
 
-        if (changed)
-        {
+        if (changed) {
             int baseAdjustment = 32 * Preset.GetInt();
 
-            for (int i = 0; i < BaseLightLevels.Size(); ++i)
-            {
+            for (int i = 0; i < BaseLightLevels.Size(); ++i) {
                 int baseLevel = BaseLightLevels[i];
                 baseLevel += PreGain.GetInt();
 
                 bool IsSky = level.Sectors[i].GetTexture(0) == skyflatnum || level.Sectors[i].GetTexture(1) == skyflatnum;
 
                 int finalAdjustment = baseAdjustment;
-                if (IsSky)
-                {
+                if (IsSky) {
                     finalAdjustment = int(finalAdjustment * SkyMode.GetFloat());
                 }
 
                 // Link to graphing calculator depiction of different modes
                 // https://www.desmos.com/calculator/v1ni4wftcg
-                switch (Mode.GetInt())
-                {
+                switch (Mode.GetInt()) {
                     case 1: //subtract raw light level (simple fade)
                         Level.Sectors[i].Lightlevel = baseLevel - finalAdjustment;
                         break;
