@@ -1,6 +1,6 @@
 AddOptionMenu "OptionsMenu"
 {
-	Submenu "DarkDoomZ (ACE Bootleg) Settings", "DarkDoomZ_Settings"
+	Submenu "DarkDoomZ Settings", "DarkDoomZ_Settings"
 }
 
 OptionMenu "DarkDoomZ_Settings"
