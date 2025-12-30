@@ -1,24 +1,53 @@
 class DDZ_MountPoint abstract {
     abstract ui string GetName();
-    abstract double, double, int, double, double GetMountInfo(); // [Ace] Spring, damping, inertia, offAngle, offZ.
+    abstract double, double, int, double, double, double GetMountInfo(); // [Ace] Spring, damping, inertia, offAngle, offLen, offZ.
+}
+
+class DDZ_Gun : DDZ_MountPoint {
+    override string GetName() { return "Gun"; }
+    override double, double, int, double, double, double GetMountInfo() { return 0.333, 0.5, 4, 0, 16, -8; }
 }
 
 class DDZ_Handheld : DDZ_MountPoint {
     override string GetName() { return "Handheld"; }
-    override double, double, int, double, double GetMountInfo() { return 0.25, 0.2, 4, 0, -13; }
+    override double, double, int, double, double, double GetMountInfo() { return 0.25, 0.2, 4, 0, 12, -12; }
 }
 
 class DDZ_LeftShoulder : DDZ_MountPoint {
     override string GetName() { return "Left shoulder"; }
-    override double, double, int, double, double GetMountInfo() { return 0.35, 0.75, 2, 80, -5; }
+    override double, double, int, double, double, double GetMountInfo() { return 0.35, 0.75, 2, 90, 8, -6; }
 }
 
 class DDZ_RightShoulder : DDZ_MountPoint {
     override string GetName() { return "Right shoulder"; }
-    override double, double, int, double, double GetMountInfo() { return 0.35, 0.75, 2, -80, -5; }
+    override double, double, int, double, double, double GetMountInfo() { return 0.35, 0.75, 2, -90, 8, -6; }
 }
 
-class DDZ_Helmet : DDZ_MountPoint {
-    override string GetName() { return "Helmet"; }
-    override double, double, int, double, double GetMountInfo() { return 1, 1, 1, 0, 4; }
+class DDZ_HelmetLeft : DDZ_MountPoint {
+    override string GetName() { return "Helmet (Left Side)"; }
+    override double, double, int, double, double, double GetMountInfo() { return 1, 1, 1, 90, 4, -4; }
+}
+
+class DDZ_HelmetRight : DDZ_MountPoint {
+    override string GetName() { return "Helmet (Right Side)"; }
+    override double, double, int, double, double, double GetMountInfo() { return 1, 1, 1, -90, 4, -4; }
+}
+
+class DDZ_HelmetTop : DDZ_MountPoint {
+    override string GetName() { return "Helmet (Top)"; }
+    override double, double, int, double, double, double GetMountInfo() { return 1, 1, 1, 0, 0, 0; }
+}
+
+class DDZ_Custom : DDZ_MountPoint {
+    override string GetName() { return "Custom"; }
+    override double, double, int, double, double, double GetMountInfo() {
+        let spring = CVar.GetCVar('ddz_fl_mount_spring', players[ConsolePlayer]).GetFloat();
+        let damping = CVar.GetCVar('ddz_fl_mount_damping', players[ConsolePlayer]).GetFloat();
+        let inertia = CVar.GetCVar('ddz_fl_mount_inertia', players[ConsolePlayer]).GetInt();
+        let offAngle = CVar.GetCVar('ddz_fl_mount_offAngle', players[ConsolePlayer]).GetFloat();
+        let offLen = CVar.GetCVar('ddz_fl_mount_offLen', players[ConsolePlayer]).GetFloat();
+        let offZ = CVar.GetCVar('ddz_fl_mount_offZ', players[ConsolePlayer]).GetFloat();
+
+        return spring, damping, inertia, offAngle, offLen, offZ;
+    }
 }
