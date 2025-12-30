@@ -92,34 +92,37 @@ class DarkDoomZ_Flashlight : HDWeapon {
         int beamIndex = min(Beam.GetInt(), Handler.Beams.Size() - 1);
         int mountIndex = min(Mount.GetInt(), Handler.Mounts.Size() - 1);
 
+        // Re-initialize light if settings changed
         if (qual != OldQuality || beamIndex != OldBeam || mountIndex != OldMount) {
             DeactivateLight(true);
-            ActivateLight(true);    
+            ActivateLight(true);
+
+            OldQuality = qual;
+            OldBeam = beamIndex;
+            OldMount = mountIndex;
         }
 
-        if (!owner) {
-            DeactivateLight(true);
-        } else if (WeaponStatus[FLProp_Battery] > 0) {
-            if (++WeaponStatus[FLProp_DrainTicker] > 6300) {
+        if (owner && WeaponStatus[FLProp_Battery] > 0) {
+
+            if (WeaponStatus[FLProp_DrainTicker]++ > 6300) {
                 WeaponStatus[FLProp_Battery]--;
-                WeaponStatus[FLProp_DrainTicker] = 0;
+                WeaponStatus[FLProp_DrainTicker] -= 6300;
             }
 
-            if (WeaponStatus[FLProp_Battery] < 6 && random(0, 1000) < 3.0 ** (6 - WeaponStatus[FLProp_Battery])) {
+            if (WeaponStatus[FLProp_Battery] < 6 && random(0, 1000) < (3.0 ** (6 - WeaponStatus[FLProp_Battery]))) {
                 int duration = (6 - WeaponStatus[FLProp_Battery]) * random(1, 4);
                 double minFac = WeaponStatus[FLProp_Battery] / 10.0;
                 double maxFac = minFac * 1.6;
 
-                if (InnerLight) { InnerLight.Flicker(duration, minFac, maxFac); }
-                if (OuterLight) { OuterLight.Flicker(duration, minFac, maxFac); }
+                if (InnerLight) InnerLight.Flicker(duration, minFac, maxFac);
+                if (OuterLight) OuterLight.Flicker(duration, minFac, maxFac);
             }
+
+            if (InnerLight) HDCore.emitFlashlightParticles(InnerLight, (owner.CheckLocalView() ? 0.2 : 0.75));
+            if (OuterLight) HDCore.emitFlashlightParticles(OuterLight, (owner.CheckLocalView() ? 0.2 : 0.75));
         } else {
             DeactivateLight(true);
         }
-
-        OldQuality = qual;
-        OldBeam = beamIndex;
-        OldMount = mountIndex;
     }
 
     void ActivateLight(bool silent = false) {
@@ -139,12 +142,12 @@ class DarkDoomZ_Flashlight : HDWeapon {
     }
 
     void DeactivateLight(bool silent = false) {
-        if (!silent && owner) {
-            owner.A_StartSound("DarkDoomZ/Flashlight/Click", CHAN_AUTO);
-        }
+        if (!silent && owner) owner.A_StartSound("DarkDoomZ/Flashlight/Click", CHAN_AUTO);
+
         Active = false;
-        if (InnerLight) { InnerLight.Destroy(); }
-        if (OuterLight) { OuterLight.Destroy(); }
+
+        if (InnerLight) InnerLight.Destroy();
+        if (OuterLight) OuterLight.Destroy();
     }
 
     override void OnDestroy() {
