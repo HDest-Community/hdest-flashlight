@@ -1,66 +1,64 @@
 class DarkDoomZ_Spotlight : DynamicLight {
-    static DarkDoomZ_Spotlight CreateBeam(Actor other, DDZ_LightBeamInfo beam, DDZ_MountPoint mount, int type) {
-        let light = DarkDoomZ_Spotlight(Spawn("DarkDoomZ_Spotlight", other.pos, false));
-        light.FollowTarget = other;
-        [light.Args[DynamicLight.LIGHT_RED], light.Args[DynamicLight.LIGHT_GREEN], light.Args[DynamicLight.LIGHT_BLUE]] = beam.GetColor(type == 2);
-        [light.SpotInnerAngle, light.SpotOuterAngle, light.Args[DynamicLight.LIGHT_INTENSITY]] = beam.GetRadius(type);
-        light.angle = other.angle;
-        light.pitch = other.pitch;
-        [light.Spring, light.Damping, light.Inertia, light.OffsetAngle, light.OffsetLen, light.OffsetZ] = mount.GetMountInfo();
-        return light;
-    }
 
-    override void Tick() {
-        Super.Tick();
-
-        if (followTarget && followTarget.player) {
-            if (Inertia == 0) Inertia = 1;
-            
-            targetpos = followTarget.Vec3Angle(
-                OffsetLen * cos(-followTarget.pitch) + OffsetLen * sin(-followTarget.pitch),
-                OffsetAngle + followTarget.angle,
-                OffsetLen * sin(-followTarget.pitch) + ((followTarget.player.viewz - followTarget.pos.z) + OffsetZ)
-            );
-
-            vel.x += DampedSpring(pos.x, targetpos.x, vel.x, 1, 1);
-            vel.y += DampedSpring(pos.y, targetpos.y, vel.y, 1, 1);
-            vel.z += DampedSpring(pos.z, targetpos.z, vel.z, 1, 1);
-
-            vela += DampedSpring(angle, followTarget.angle, vela, Spring, Damping);
-            velp += DampedSpring(pitch, followTarget.pitch, velp, Spring, Damping);
-
-            SetOrigin(pos + vel, true);
-            A_SetAngle(angle + (vela / Inertia), true);
-            A_SetPitch(pitch + (velp / Inertia), true);
-        }
-
-        if (OldIntensity > 0 && UnflickerTimer-- == 0) {
-            Args[DynamicLight.LIGHT_INTENSITY] = OldIntensity;
-            OldIntensity = 0;
-        }
-    }
-
-    void Flicker(int offDuration, double minFac, double maxFac) {
-        if (OldIntensity == 0) {
-            OldIntensity = Args[DynamicLight.LIGHT_INTENSITY];
-            Args[DynamicLight.LIGHT_INTENSITY] = int(Args[DynamicLight.LIGHT_INTENSITY] * frandom(minFac, maxFac));
-            UnflickerTimer = offDuration;
-        }
-    }
-
-    double DampedSpring(double p, double r, double v, double k, double d) {
-        return -(d * v) - (k * (p - r));
-    }
-
-    private int OldIntensity, UnflickerTimer;
-    private Actor FollowTarget;
-    private vector3 targetPos;
-    private double vela, velp, Spring, Damping, OffsetAngle, OffsetLen, OffsetZ;
+    private int oldIntensity, unflickerTimer;
+    private Actor followTarget;
+    private double vela, velp, spring, damping, offsetAngle, offsetLen, offsetZ;
     private int Inertia;
 
     Default {
         DynamicLight.Type "Point";
         +DYNAMICLIGHT.ATTENUATE;
         +DYNAMICLIGHT.SPOT
+    }
+
+    static DarkDoomZ_Spotlight CreateBeam(Actor other, DDZ_LightBeamInfo beam, DDZ_MountPoint mount, int type) {
+        let light = DarkDoomZ_Spotlight(Spawn("DarkDoomZ_Spotlight", other.pos, false));
+        light.followTarget = other;
+        [light.args[DynamicLight.LIGHT_RED], light.args[DynamicLight.LIGHT_GREEN], light.args[DynamicLight.LIGHT_BLUE]] = beam.GetColor(type == 2);
+        [light.spotInnerAngle, light.spotOuterAngle, light.args[DynamicLight.LIGHT_INTENSITY]] = beam.GetRadius(type);
+        light.angle = other.angle;
+        light.pitch = other.pitch;
+        [light.spring, light.damping, light.inertia, light.offsetAngle, light.offsetLen, light.offsetZ] = mount.GetMountInfo();
+        return light;
+    }
+
+    override void Tick() {
+        super.Tick();
+
+        if (followTarget && followTarget.player) {
+            if (inertia == 0) inertia = 1;
+
+            UpdateSpotlight(followTarget.Vec3Angle(
+                offsetLen * cos(-followTarget.pitch) + offsetLen * sin(-followTarget.pitch),
+                offsetAngle + followTarget.angle,
+                offsetLen * sin(-followTarget.pitch) + ((followTarget.player.viewz - followTarget.pos.z) + offsetZ)
+            ));
+        }
+
+        if (oldIntensity > 0 && unflickerTimer-- == 0) {
+            args[DynamicLight.LIGHT_INTENSITY] = oldIntensity;
+            oldIntensity = 0;
+        }
+    }
+
+    void UpdateSpotlight(Vector3 targetPos) {
+        vel.x += HDCore.dampedSpring(pos.x, targetPos.x, vel.x, 1, 1);
+        vel.y += HDCore.dampedSpring(pos.y, targetPos.y, vel.y, 1, 1);
+        vel.z += HDCore.dampedSpring(pos.z, targetPos.z, vel.z, 1, 1);
+
+        vela += HDCore.dampedSpring(angle, followTarget.angle, vela, spring, damping);
+        velp += HDCore.dampedSpring(pitch, followTarget.pitch, velp, spring, damping);
+
+        SetOrigin(pos + vel, true);
+        A_SetAngle(angle + (vela / inertia), true);
+        A_SetPitch(pitch + (velp / inertia), true);
+    }
+
+    void Flicker(int offDuration, double minFac, double maxFac) {
+        if (oldIntensity == 0) {
+            oldIntensity = args[DynamicLight.LIGHT_INTENSITY];
+            args[DynamicLight.LIGHT_INTENSITY] = clamp(int(args[DynamicLight.LIGHT_INTENSITY] * frandom(minFac, maxFac)), 1, 256);
+            unflickerTimer = offDuration;
+        }
     }
 }

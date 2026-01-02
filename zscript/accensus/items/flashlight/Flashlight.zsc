@@ -6,215 +6,231 @@ class DarkDoomZ_Flashlight : HDWeapon {
         FLProp_DrainTicker
     }
 
-    private bool Active;
-    private int UseOffset;
+    private bool active;
+    private int useOffset;
 
-    private transient CVar Quality, Beam, Mount;
-    private int OldQuality, OldBeam, OldMount;
-    private DarkDoomZ_Spotlight InnerLight, OuterLight;
-    private DarkDoomZ_DataHandler Handler;
+    private transient CVar quality, beam, mount;
+    private int oldQuality, oldBeam, oldMount;
 
-    Default {
-        +HDWEAPON.FITSINBACKPACK
-        +INVENTORY.INVBAR
-        +WEAPON.WIMPY_WEAPON
-        -HDWEAPON.DROPTRANSLATION
-        Inventory.Icon "DDFLA0";
-        Inventory.PickupSound "weapons/pocket";
-        Inventory.PickupMessage "You picked up a flashlight.";
-        Tag "Flashlight";
-        HDWeapon.RefId "ddf";
+    private DarkDoomZ_Spotlight innerLight, outerLight;
+    private DarkDoomZ_DataHandler handler;
+
+    default {
+        +HDWeapon.FITSINBACKPACK
+        +Inventory.INVBAR
+        +Weapon.WIMPY_WEAPON
+        -HDWeapon.DROPTRANSLATION
+
+        Tag "$TAG_FLASHLIGHT";
+
+        Inventory.icon "DDFLA0";
+        Inventory.pickupSound "weapons/pocket";
+        Inventory.pickupMessage "$PICKUP_FLASHLIGHT";
+        HDWeapon.refId "ddf";
+
         Scale 0.6;
     }
 
     private action void A_AddOffset(int ofs) {
-        invoker.UseOffset += ofs;
+        invoker.useOffset += ofs;
     }
 
-    override bool Use(bool pickup) {
+    override bool use(bool pickup) {
         if (!pickup && owner && !(owner.player.cmd.buttons & BT_USE)) {
-            if (Active) {
-                DeactivateLight();
+            if (active) {
+                deactivateLight();
             } else {
-                ActivateLight();
+                activateLight();
             }
 
             return false;
         }
 
-        return Super.Use(pickup);
+        return super.use(pickup);
     }
 
-    override bool AddSpareWeapon(actor newowner) {
-        return AddSpareWeaponRegular(newowner);
+    override bool addSpareWeapon(actor newOwner) {
+        return addSpareWeaponRegular(newOwner);
     }
 
-    override HDWeapon GetSpareWeapon(actor newowner , bool reverse, bool doselect) {
-        return GetSpareWeaponRegular(newowner, reverse, doselect);
+    override HDWeapon getSpareWeapon(actor newOwner, bool reverse, bool doSelect) {
+        return getSpareWeaponRegular(newOwner, reverse, doSelect);
     }
 
-    override string, double GetPickupSprite() {
+    override string, double getPickupSprite() {
         return "DDFLA0", 1.0;
     }
 
-    override string GetHelpText() {
+    override string getHelpText() {
         return WEPHELP_RELOAD.."  Reload battery\n"
         ..WEPHELP_UNLOAD.."  Unload battery\n"
         ..WEPHELP_USE.." (item)  Toggle on/off";
     }
-    override double WeaponBulk() { return 8 + (WeaponStatus[FLProp_Battery] >= 0 ? ENC_BATTERY_LOADED : 0); }
-    override void InitializeWepStats(bool idfa) {
-        WeaponStatus[FLProp_Battery] = 20;
+
+    override double weaponBulk() {
+        return 8 + (weaponStatus[FLProp_Battery] >= 0 ? ENC_BATTERY_LOADED : 0);
     }
 
-    override void DrawHUDStuff(HDStatusBar sb, HDWeapon hdw, HDPlayerPawn hpl) {
+    override void initializeWepStats(bool idfa) {
+        weaponStatus[FLProp_Battery] = 20;
+    }
+
+    override void drawHUDStuff(HDStatusBar sb, HDWeapon hdw, HDPlayerPawn hpl) {
         vector2 bob = hpl.wepbob * 0.3;
-        bob.y += UseOffset;
+        bob.y += useOffset;
         
-        sb.DrawImage("DDFLA0", bob, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, scale: (3.0, 3.0));
-        int bat = hdw.WeaponStatus[FLProp_Battery];
+        sb.drawImage("DDFLA0", bob, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, scale: (3.0, 3.0));
+
+        int bat = hdw.weaponStatus[FLProp_Battery];
         if (bat >= 0) {
-            sb.DrawImage(AceCore.GetBatteryColor(bat), (0, 30) + bob, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, scale: (1.5, 1.5));
+            sb.drawImage(AceCore.getBatteryColor(bat), (0, 30) + bob, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, scale: (1.5, 1.5));
         }
     }
 
-    override void Tick() {
-        Super.Tick();
+    override void tick() {
+        super.tick();
 
-        if (!Quality) Quality = CVar.GetCvar("ddz_fl_quality");
-        if (!Beam)    Beam = CVar.GetCvar("ddz_fl_type");
-        if (!Mount)   Mount = CVar.GetCvar("ddz_fl_pos");
-        if (!Handler) Handler = DarkDoomZ_DataHandler(StaticEventHandler.Find('DarkDoomZ_DataHandler'));
+        if (!handler) handler = DarkDoomZ_DataHandler(StaticEventHandler.find('DarkDoomZ_DataHandler'));
 
-        if (!Active) return;
+        if (!quality) quality = CVar.getCvar("ddz_fl_quality");
+        if (!beam)    beam = CVar.getCvar("ddz_fl_type");
+        if (!mount)   mount = CVar.getCvar("ddz_fl_pos");
 
-        int qual = Quality.GetInt();
-        int beamIndex = min(Beam.GetInt(), Handler.Beams.Size() - 1);
-        int mountIndex = min(Mount.GetInt(), Handler.Mounts.Size() - 1);
+        if (!active) return;
+
+        int qual = quality.getInt();
+        int beamIndex = clamp(beam.getInt(), 0, handler.beams.size() - 1);
+        int mountIndex = clamp(mount.getInt(), 0, handler.mounts.size() - 1);
 
         // Re-initialize light if settings changed
-        if (qual != OldQuality || beamIndex != OldBeam || mountIndex != OldMount) {
-            DeactivateLight(true);
-            ActivateLight(true);
+        if (qual != oldQuality || beamIndex != oldBeam || mountIndex != oldMount) {
+            deactivateLight(true);
+            activateLight(true);
 
-            OldQuality = qual;
-            OldBeam = beamIndex;
-            OldMount = mountIndex;
+            oldQuality = qual;
+            oldBeam = beamIndex;
+            oldMount = mountIndex;
         }
 
-        if (owner && WeaponStatus[FLProp_Battery] > 0) {
+        if (owner && weaponStatus[FLProp_Battery] > 0) {
 
-            if (WeaponStatus[FLProp_DrainTicker]++ > 6300) {
-                WeaponStatus[FLProp_Battery]--;
-                WeaponStatus[FLProp_DrainTicker] -= 6300;
+            if (weaponStatus[FLProp_DrainTicker]++ > 6300) {
+                weaponStatus[FLProp_Battery]--;
+                weaponStatus[FLProp_DrainTicker] -= 6300;
             }
 
-            if (WeaponStatus[FLProp_Battery] < 6 && random(0, 1000) < (3.0 ** (6 - WeaponStatus[FLProp_Battery]))) {
-                int duration = (6 - WeaponStatus[FLProp_Battery]) * random(1, 4);
-                double minFac = WeaponStatus[FLProp_Battery] / 10.0;
+            if (weaponStatus[FLProp_Battery] < 6 && random(0, 1000) < (3.0 ** (6 - weaponStatus[FLProp_Battery]))) {
+                int duration = (6 - weaponStatus[FLProp_Battery]) * random(1, 4);
+                double minFac = weaponStatus[FLProp_Battery] / 10.0;
                 double maxFac = minFac * 1.6;
 
-                if (InnerLight) InnerLight.Flicker(duration, minFac, maxFac);
-                if (OuterLight) OuterLight.Flicker(duration, minFac, maxFac);
+                if (innerLight) innerLight.flicker(duration, minFac, maxFac);
+                if (outerLight) outerLight.flicker(duration, minFac, maxFac);
             }
 
-            if (InnerLight) HDCore.emitFlashlightParticles(InnerLight, (owner.CheckLocalView() ? 0.2 : 0.75));
-            if (OuterLight) HDCore.emitFlashlightParticles(OuterLight, (owner.CheckLocalView() ? 0.2 : 0.75));
+            if (innerLight) HDCore.emitFlashlightParticles(innerLight, (owner.checkLocalView() ? 0.2 : 0.75));
+            if (outerLight) HDCore.emitFlashlightParticles(outerLight, (owner.checkLocalView() ? 0.2 : 0.75));
         } else {
-            DeactivateLight(true);
+            deactivateLight(true);
         }
     }
 
-    void ActivateLight(bool silent = false) {
+    void activateLight(bool silent = false) {
         if (!silent && owner) owner.A_StartSound("DarkDoomZ/Flashlight/Click", CHAN_AUTO);
 
-        if (WeaponStatus[FLProp_Battery] > 0) {
-            Active = true;
+        if (weaponStatus[FLProp_Battery] > 0) {
+            active = true;
 
-            int qual = Quality.GetInt();
-            int beamIndex = min(Beam.GetInt(), Handler.Beams.Size() - 1);
-            int mountIndex = min(Mount.GetInt(), Handler.Mounts.Size() - 1);
+            int qual = quality.getInt();
+            int beamIndex = min(beam.getInt(), handler.beams.size() - 1);
+            int mountIndex = min(mount.getInt(), handler.mounts.size() - 1);
 
-            if (!InnerLight) InnerLight = DarkDoomZ_Spotlight.CreateBeam(owner, Handler.Beams[beamIndex], Handler.Mounts[mountIndex], qual == 1);
+            if (!innerLight) innerLight = DarkDoomZ_Spotlight.createBeam(owner, handler.beams[beamIndex], handler.mounts[mountIndex], qual == 1);
 
-            if (qual == 1 && !OuterLight) OuterLight = DarkDoomZ_Spotlight.CreateBeam(owner, Handler.Beams[beamIndex], Handler.Mounts[mountIndex], 2);
+            if (qual == 1 && !outerLight) outerLight = DarkDoomZ_Spotlight.createBeam(owner, handler.beams[beamIndex], handler.mounts[mountIndex], 2);
         }
     }
 
-    void DeactivateLight(bool silent = false) {
+    void deactivateLight(bool silent = false) {
         if (!silent && owner) owner.A_StartSound("DarkDoomZ/Flashlight/Click", CHAN_AUTO);
 
-        Active = false;
+        active = false;
 
-        if (InnerLight) InnerLight.Destroy();
-        if (OuterLight) OuterLight.Destroy();
+        if (innerLight) innerLight.destroy();
+        if (outerLight) outerLight.destroy();
     }
 
     override void OnDestroy() {
-        DeactivateLight();
-        Super.OnDestroy();
+        super.onDestroy();
+
+        deactivateLight();
     }
 
-    override void Travelled() {
-        if (Active) ActivateLight(true);
+    override void travelled() {
+        super.travelled();
+
+        if (active) activateLight(true);
     }
 
-    States {
-        Spawn:
+    states {
+        spawn:
             DDFL A -1 NoDelay;
             Loop;
-        Select:
+
+        select:
             TNT1 A 0 A_AddOffset(100);
-            Goto Super::Select;
-        Ready:
+            goto super::select;
+
+        ready:
             TNT1 A 1 {
-                if (PressingUser3()) {
+                if (pressingUser3()) {
                     A_MagManager("HDBattery");
                     return;
                 }
 
-                int off = invoker.UseOffset;
+                int off = invoker.useOffset;
                 if (off > 0) {
-                    invoker.UseOffset = off * 2 / 3;
+                    invoker.useOffset = off * 2 / 3;
                 }
 
                 A_WeaponReady(WRF_ALL | WRF_NOFIRE);
             }
-            Goto ReadyEnd;
-        Unload:
+            goto readyEnd;
+
+        unload:
             TNT1 A 20;
             TNT1 A 5 {
-                int Bat = invoker.WeaponStatus[FLProp_Battery];
-                if (Bat < 0) {
-                    return;
-                }
-                if (PressingUnload() || PressingReload()) {
-                    HDBattery.GiveMag(self, "HDBattery", Bat);
+                let bat = invoker.weaponStatus[FLProp_Battery];
+                if (bat < 0) return;
+
+                if (pressingUnload() || pressingReload()) {
+                    HDBattery.giveMag(self, "HDBattery", bat);
                     A_StartSound("weapons/pocket", 9);
                     A_SetTics(20);
                 } else {
-                    HDBattery.SpawnMag(self, "HDBattery", Bat);
+                    HDBattery.spawnMag(self, "HDBattery", bat);
                 }
-                invoker.WeaponStatus[FLProp_Battery] = -1;
+
+                invoker.weaponStatus[FLProp_Battery] = -1;
             }
-            Goto ReloadEnd;
-        Reload:
+            goto reloadEnd;
+
+        reload:
             TNT1 A 14 A_StartSound("weapons/pocket", 9);
             TNT1 A 5 {
-                if (invoker.WeaponStatus[FLProp_Battery] >= 0) {
-                    return;
-                }
-                let Bat = HDBattery(FindInventory("HDBattery"));
-                if(!Bat) {
-                    return;
-                }
-                int Amt = Bat.TakeMag(true);
-                invoker.WeaponStatus[FLProp_Battery] = Amt;
+                if (invoker.weaponStatus[FLProp_Battery] >= 0) return;
+
+                let bat = HDBattery(findInventory("HDBattery"));
+                if(!bat) return;
+
+                invoker.weaponStatus[FLProp_Battery] = bat.takeMag(true);
+
                 A_StartSound("weapons/vulcopen1", 8, CHANF_OVERLAP);
             }
-            Goto ReloadEnd;
-        ReloadEnd:
+            goto reloadEnd;
+
+        reloadEnd:
             TNT1 A 6;
-            Goto ready;
+            goto ready;
     }
 }

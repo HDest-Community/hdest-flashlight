@@ -1,0 +1,4 @@
+[enu default]
+
+TAG_FLASHLIGHT = "Flashlight";
+PICKUP_FLASHLIGHT = "You picked up a flashlight.";
