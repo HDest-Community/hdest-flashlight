@@ -28,11 +28,16 @@ class DarkDoomZ_Spotlight : DynamicLight {
         if (followTarget && followTarget.player) {
             if (inertia == 0) inertia = 1;
 
-            UpdateSpotlight(followTarget.Vec3Angle(
-                offsetLen * cos(-followTarget.pitch) + offsetLen * sin(-followTarget.pitch),
-                offsetAngle + followTarget.angle,
-                offsetLen * sin(-followTarget.pitch) + ((followTarget.player.viewz - followTarget.pos.z) + offsetZ)
-            ));
+            UpdateSpotlight(
+                followTarget.Vec3Offset(
+                    cos(followTarget.angle + offsetAngle) * offsetLen,
+                    sin(followTarget.angle + offsetAngle) * offsetLen,
+                    sin(followTarget.pitch) + (followTarget.player.viewz - followTarget.pos.z) + offsetZ
+                ),
+                followTarget.angle,
+                followTarget.pitch,
+                getAge()
+            );
         }
 
         if (oldIntensity > 0 && unflickerTimer-- == 0) {
@@ -41,17 +46,21 @@ class DarkDoomZ_Spotlight : DynamicLight {
         }
     }
 
-    void UpdateSpotlight(Vector3 targetPos) {
-        vel.x += HDCore.dampedSpring(pos.x, targetPos.x, vel.x, 1, 1);
-        vel.y += HDCore.dampedSpring(pos.y, targetPos.y, vel.y, 1, 1);
-        vel.z += HDCore.dampedSpring(pos.z, targetPos.z, vel.z, 1, 1);
+    void UpdateSpotlight(Vector3 targetPos, double targetAngle, double targetPitch, bool interpolate = true) {
+        if (interpolate) {
+            vel += HDCore.dampedVec3Spring(pos, targetPos, vel, 1, 1);
 
-        vela += HDCore.dampedSpring(angle, followTarget.angle, vela, spring, damping);
-        velp += HDCore.dampedSpring(pitch, followTarget.pitch, velp, spring, damping);
+            vela += HDCore.dampedSpring(angle, targetAngle, vela, spring, damping);
+            velp += HDCore.dampedSpring(pitch, targetPitch, velp, spring, damping);
 
-        SetOrigin(pos + vel, true);
-        A_SetAngle(angle + (vela / inertia), true);
-        A_SetPitch(pitch + (velp / inertia), true);
+            SetOrigin(pos + vel, true);
+            A_SetAngle(angle + (vela / inertia), true);
+            A_SetPitch(pitch + (velp / inertia), true);
+        } else {
+            SetOrigin(targetPos, true);
+            A_SetAngle(targetAngle, true);
+            A_SetPitch(targetPitch, true);
+        }
     }
 
     void Flicker(int offDuration, double minFac, double maxFac) {
