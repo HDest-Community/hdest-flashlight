@@ -1,0 +1,207 @@
+class HDFloodLight : Actor {
+
+    private bool active;
+    private int battery;
+    private int drainTicker;
+
+    private transient CVar quality;
+    private int oldQuality;
+
+    private DarkDoomZ_Spotlight leftInnerLight, leftOuterLight, rightInnerLight, rightOuterLight;
+
+    default {
+        +SOLID
+        +FRIENDLY
+        +SHOOTABLE
+        +DONTTHRUST
+        +NOTARGET
+        // +NODAMAGE
+        +NOBLOOD
+        +FORCEYBILLBOARD
+
+        tag "$TAG_FLOODLIGHT";
+
+        health 1;
+        
+        radius 24;
+        height 69;
+        mass 200;
+    }
+    
+    override void postBeginPlay() {
+        super.postBeginPlay();
+
+        if (!quality) quality = CVar.getCvar("ddz_fl_quality");
+
+        battery = random(-1, 10);
+
+        if (battery > 0 && random() > (curSector.lightLevel * 2)) activateLight(true);
+    }
+
+    override void tick() {
+
+        super.tick();
+
+        if (isFrozen()) return;
+
+        if (health < 1) return;
+
+        if (active && battery > 0) {
+            frame = 0;
+
+            int qual = quality.getInt();
+
+            // Re-initialize light if settings changed
+            if (qual != oldQuality) {
+                deactivateLight(true);
+                activateLight(true);
+
+                oldQuality = qual;
+            }
+
+            if (leftInnerLight) updateLight(leftInnerLight, 0);
+            if (leftOuterLight) updateLight(leftOuterLight, 0);
+
+            if (rightInnerLight) updateLight(rightInnerLight, 1);
+            if (rightOuterLight) updateLight(rightOuterLight, 1);
+
+            if (drainTicker++ > 6300) {
+                battery--;
+                drainticker -= 6300;
+            }
+
+            if (battery < 6 && random(0, 1000) < (3.0 ** (6 - battery))) {
+                int duration = (6 - battery) * random(1, 4);
+                double minFac = battery / 10.0;
+                double maxFac = minFac * 1.6;
+
+                if (leftInnerLight) leftInnerLight.flicker(duration, minFac, maxFac);
+                if (leftOuterLight) leftOuterLight.flicker(duration, minFac, maxFac);
+
+                if (rightInnerLight) rightInnerLight.flicker(duration, minFac, maxFac);
+                if (rightOuterLight) rightOuterLight.flicker(duration, minFac, maxFac);
+
+                frame = 1;
+            }
+
+            if (leftInnerLight) HDCore.emitFlashlightParticles(leftInnerLight, quality: 1, startOffset: 5.0, scale: 1.5, alpha: 0.75);
+            if (leftOuterLight) HDCore.emitFlashlightParticles(leftOuterLight, quality: qual ? 1 : 3, startOffset: 5.0, scale: 1.5, alpha: 0.333);
+
+            if (rightInnerLight) HDCore.emitFlashlightParticles(rightInnerLight, quality: 1, startOffset: 5.0, scale: 1.5, alpha: 0.75);
+            if (rightOuterLight) HDCore.emitFlashlightParticles(rightOuterLight, quality: qual ? 1 : 3, startOffset: 5.0, scale: 1.5, alpha: 0.333);
+        } else {
+            DeactivateLight(true);
+        }
+    }
+
+    override bool used(Actor user) {
+
+        if (user is 'HDPlayerPawn' && HDPlayerPawn(user).player.crouchFactor < 0.7) {
+            let bat = user.findInventory('HDBattery');
+            if (battery < 0 && bat) {
+                battery = HDMagAmmo(bat).takeMag(false);
+            } else {
+                HDBattery.spawnMag(user, 'HDBattery', battery);
+                battery = -1;
+            }
+        } else {
+            toggleLight();
+        }
+
+        return super.used(user);
+    }
+
+    override void onDestroy() {
+        super.onDestroy();
+        
+        deactivateLight(true);
+    }
+
+    void toggleLight(bool silent = false) {
+        if (health > 0) {
+            if (active || battery <= 0) {
+                deactivateLight(silent);
+            } else {
+                activateLight(silent);
+            }
+        }
+    }
+
+    void activateLight(bool silent = false) {
+        if (!silent) A_StartSound("DarkDoomZ/Flashlight/Click", CHAN_AUTO);
+
+        active = true;
+
+        int qual = quality.getInt();
+
+        let beam = new ("DDZ_LED");
+        let leftMount = new ("DDZ_ShoulderLeft");
+        let rightMount = new ("DDZ_ShoulderRight");
+
+        if (beam && leftMount && rightMount) {
+            if (!leftOuterLight) leftOuterLight = DarkDoomZ_Spotlight.createBeam(self, beam, leftMount, qual == 1);
+            if (!rightOuterLight) rightOuterLight = DarkDoomZ_Spotlight.createBeam(self, beam, rightMount, qual == 1);
+            
+            if (qual == 1) {
+                if (!leftInnerLight) leftInnerLight = DarkDoomZ_Spotlight.createBeam(self, beam, leftMount, 2);
+                if (!rightInnerLight) rightInnerLight = DarkDoomZ_Spotlight.createBeam(self, beam, rightMount, 2);
+            }
+        }
+
+        setStateLabel('lightOn');
+    }
+
+    void deactivateLight(bool silent = false) {
+        if (!silent) A_StartSound("DarkDoomZ/Flashlight/Click", CHAN_AUTO);
+
+        active = false;
+
+        if (leftInnerLight) leftInnerLight.destroy();
+        if (leftOuterLight) leftOuterLight.destroy();
+        if (rightInnerLight) rightInnerLight.destroy();
+        if (rightOuterLight) rightOuterLight.destroy();
+
+        setStateLabel('lightOff');
+    }
+
+    void updateLight(DarkDoomZ_Spotlight light, bool side) {
+        let offset = 18;
+
+        let a = (side ? 80 : -80) + angle;
+        light.UpdateSpotlight(
+            Vec3Offset(
+                cos(a) * offset,
+                sin(a) * offset,
+                sin(pitch) + height - 10
+            ),
+            angle,
+            pitch,
+            false
+        );
+    }
+
+    states {
+        spawn:
+            FLUD B 1;
+            loop;
+        
+        lightOn:
+            #### A 1;
+            loop;
+
+        lightOff:
+            #### B 1;
+            loop;
+
+        death:
+            #### C -1 {
+                active = false;
+
+                if (leftInnerLight) leftInnerLight.destroy();
+                if (leftOuterLight) leftOuterLight.destroy();
+                if (rightInnerLight) rightInnerLight.destroy();
+                if (rightOuterLight) rightOuterLight.destroy();
+            }
+            stop;
+    }
+}
