@@ -51,7 +51,7 @@ A settings menu is provided to adjust the effect. The following settings are ava
 
 ## Credits
 
-### Inspiration
+### Original DDZ Inspiration
 - "Dark Doom" by Josh771. No code used.
 
 ### Code
