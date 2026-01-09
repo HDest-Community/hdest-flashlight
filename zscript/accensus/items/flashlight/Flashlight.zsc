@@ -128,8 +128,8 @@ class DarkDoomZ_Flashlight : HDWeapon {
                 if (outerLight) outerLight.flicker(duration, minFac, maxFac);
             }
 
-            if (innerLight) HDCore.emitFlashlightParticles(innerLight, (owner.checkLocalView() ? 0.2 : 0.75));
-            if (outerLight) HDCore.emitFlashlightParticles(outerLight, (owner.checkLocalView() ? 0.2 : 0.75));
+            if (innerLight) HDCore.emitFlashlightParticles(innerLight, quality: 3, scale: 1.0, alpha: (owner.checkLocalView() ? 0.5 : 1.0));
+            if (outerLight) HDCore.emitFlashlightParticles(outerLight, quality: quality ? 1 : 3, scale: 1.0, alpha: (owner.checkLocalView() ? 0.2 : 0.75));
         } else {
             deactivateLight(true);
         }
