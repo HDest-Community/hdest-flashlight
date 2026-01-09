@@ -70,3 +70,4 @@ A settings menu is provided to adjust the effect. The following settings are ava
 
 ### Graphics
 - Accensus: Nice logo for DarkDoomZ
+- Pillowblaster: Flashlight Sprite
