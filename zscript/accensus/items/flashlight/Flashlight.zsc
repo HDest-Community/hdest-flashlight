@@ -145,9 +145,9 @@ class DarkDoomZ_Flashlight : HDWeapon {
             int beamIndex = min(beam.getInt(), handler.beams.size() - 1);
             int mountIndex = min(mount.getInt(), handler.mounts.size() - 1);
 
-            if (!innerLight) innerLight = DarkDoomZ_Spotlight.createBeam(owner, handler.beams[beamIndex], handler.mounts[mountIndex], qual == 1);
+            if (!outerLight) outerLight = DarkDoomZ_Spotlight.createBeam(owner, handler.beams[beamIndex], handler.mounts[mountIndex], qual == 1);
 
-            if (qual == 1 && !outerLight) outerLight = DarkDoomZ_Spotlight.createBeam(owner, handler.beams[beamIndex], handler.mounts[mountIndex], 2);
+            if (qual == 1 && !innerLight) innerLight = DarkDoomZ_Spotlight.createBeam(owner, handler.beams[beamIndex], handler.mounts[mountIndex], 2);
         }
     }
 
