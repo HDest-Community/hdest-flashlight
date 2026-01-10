@@ -163,6 +163,8 @@ class HDFlashlight : HDWeapon {
         if (weaponStatus[FLProp_Battery] > 0) {
             active = true;
 
+            if (!handler) handler = HDFLDataHandler(StaticEventHandler.find('HDFLDataHandler'));
+
             int qual = quality.getInt();
 
             if (!outerLight) outerLight = HDFLSpotlight.createBeam(
