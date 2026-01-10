@@ -1,0 +1,44 @@
+class HDFL_MountPoint abstract {
+    abstract clearscope string GetName();
+    abstract double, double, int, double, double, double GetMountInfo(); // [Ace] Spring, damping, inertia, offAngle, offLen, offZ.
+}
+
+class HDFL_Gun : HDFL_MountPoint {
+    override string GetName() { return "Gun"; }
+    override double, double, int, double, double, double GetMountInfo() { return 0.75, 0.666, 2, 0, 12, -12; }
+}
+
+class HDFL_HandheldLeft : HDFL_MountPoint {
+    override string GetName() { return "Handheld (Left)"; }
+    override double, double, int, double, double, double GetMountInfo() { return 0.9, 0.5, 2, 45, 8, -14; }
+}
+
+class HDFL_HandheldRight : HDFL_MountPoint {
+    override string GetName() { return "Handheld (Right)"; }
+    override double, double, int, double, double, double GetMountInfo() { return 0.9, 0.5, 2, -45, 8, -14; }
+}
+
+class HDFL_ShoulderLeft : HDFL_MountPoint {
+    override string GetName() { return "Shoulder (Left)"; }
+    override double, double, int, double, double, double GetMountInfo() { return 0.25, 0.75, 1, 90, 8, -10; }
+}
+
+class HDFL_ShoulderRight : HDFL_MountPoint {
+    override string GetName() { return "Shoulder (Right)"; }
+    override double, double, int, double, double, double GetMountInfo() { return 0.25, 0.75, 1, -90, 8, -10; }
+}
+
+class HDFL_HelmetLeft : HDFL_MountPoint {
+    override string GetName() { return "Helmet (Left)"; }
+    override double, double, int, double, double, double GetMountInfo() { return 1, 1, 1, 90, 4, -4; }
+}
+
+class HDFL_HelmetRight : HDFL_MountPoint {
+    override string GetName() { return "Helmet (Right)"; }
+    override double, double, int, double, double, double GetMountInfo() { return 1, 1, 1, -90, 4, -4; }
+}
+
+class HDFL_HelmetTop : HDFL_MountPoint {
+    override string GetName() { return "Helmet (Top)"; }
+    override double, double, int, double, double, double GetMountInfo() { return 1, 1, 1, 0, 0, -1; }
+}

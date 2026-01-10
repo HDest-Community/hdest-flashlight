@@ -1,10 +1,13 @@
 version "4.14"
 
-#include "zscript/darkdoomz/Beams.zsc"
-#include "zscript/darkdoomz/Handlers.zsc"
-#include "zscript/darkdoomz/Lights.zsc"
-#include "zscript/darkdoomz/MenuStuff.zsc"
-#include "zscript/darkdoomz/Mounts.zsc"
+// Base Flashlight Data Classes
+#include "zscript/accensus/flashlight/Beams.zsc"
+#include "zscript/accensus/flashlight/Mounts.zsc"
+#include "zscript/accensus/flashlight/Lights.zsc"
 
+#include "zscript/accensus/flashlight/Handlers.zsc"
+
+
+// Items, Decorations, etc.
 #include "zscript/accensus/decorations/floodLamp/FloodLamp.zsc"
 #include "zscript/accensus/items/flashlight/Flashlight.zsc"

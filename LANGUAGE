@@ -1,5 +1,18 @@
 [enu default]
 
-TAG_FLOODLIGHT = "Floodlight";
-TAG_FLASHLIGHT = "Flashlight";
-PICKUP_FLASHLIGHT = "You picked up a flashlight.";
+TAG_FLASHLIGHT      = "Flashlight";
+TAG_FLOODLIGHT      = "Floodlight";
+
+PICKUP_FLASHLIGHT   = "You picked up a flashlight.";
+
+// Weapon Help
+FLWH_USE            = "  Toggle Flashlight On/Off\n";
+FLWH_UNLOAD         = "  Remove Battery\n";
+FLWH_RELOAD         = "  Insert Battery\n";
+FLWH_CYCLE_MOUNTS   = "  Cycle Mounting Point\n";
+
+// Menu Labels
+HDFL_MENU           = "\c[White]Ⓕ\c- HDest Flashlight";
+HDFL_MENU_QUALITY   = "Quality";
+HDFL_MENU_PARTICLES = "Particles";
+HDFL_MENU_TOGGLEKEY = "Toggle Key";

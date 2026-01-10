@@ -1,4 +1,4 @@
-AddKeySection "DarkDoomZ" "DarkDoomZ"
-AddMenuKey "Toggle Flashlight" ddz_toggleflashlight
-alias ddz_toggleflashlight "use DarkDoomZ_Flashlight"
-defaultbind "f" ddz_toggleflashlight
+AddKeySection "HDest Flashlight" "HDest Flashlight"
+AddMenuKey "Toggle Flashlight" hdfl_toggleflashlight
+alias hdfl_toggleflashlight "use HDFlashlight"
+defaultbind "f" hdfl_toggleflashlight

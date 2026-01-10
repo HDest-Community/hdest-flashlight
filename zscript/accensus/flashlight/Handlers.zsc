@@ -1,0 +1,11 @@
+class HDFLDataHandler : StaticEventHandler {
+    Array<HDFL_LightBeamInfo> beams;
+    Array<HDFL_MountPoint> mounts;
+
+    override void OnRegister() {
+        for (int i = 0; i < AllClasses.Size(); ++i) {
+            if (HDCore.isChildClass(AllClasses[i], 'HDFL_LightBeamInfo')) beams.Push(HDFL_LightBeamInfo(new(AllClasses[i])));
+            if (HDCore.isChildClass(AllClasses[i], 'HDFL_MountPoint'))    mounts.Push(HDFL_MountPoint(new(AllClasses[i])));
+        }
+    }
+}

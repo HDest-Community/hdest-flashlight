@@ -1,10 +1,10 @@
-class DDZ_LightBeamInfo abstract {
+class HDFL_LightBeamInfo abstract {
     abstract clearscope string GetName();
     abstract int, int, int GetRadius(int type); // [Ace] 0 = simple, 1 = quality, inner beam, 2 = quality, outer beam;
     abstract int, int, int GetColor(bool secondary);
 }
 
-class DDZ_RedFilter : DDZ_LightBeamInfo {
+class HDFL_RedFilter : HDFL_LightBeamInfo {
     override string GetName() { return "Red filter"; }
     override int, int, int GetRadius(int type) {
         switch (type) {
@@ -20,7 +20,7 @@ class DDZ_RedFilter : DDZ_LightBeamInfo {
     }
 }
 
-class DDZ_Incandescent : DDZ_LightBeamInfo {
+class HDFL_Incandescent : HDFL_LightBeamInfo {
     override string GetName() { return "Incandescent (Yellow)"; }
     override int, int, int GetRadius(int type) {
         switch (type) {
@@ -35,7 +35,7 @@ class DDZ_Incandescent : DDZ_LightBeamInfo {
     }
 }
 
-class DDZ_IncandescentBlue : DDZ_Incandescent {
+class HDFL_IncandescentBlue : HDFL_Incandescent {
     override string GetName() { return "Incandescent (Blue)"; }
     override int, int, int GetColor(bool secondary) {
         if (secondary) { return 127, 160, 191; }
@@ -44,7 +44,7 @@ class DDZ_IncandescentBlue : DDZ_Incandescent {
 }
 
 
-class DDZ_Halogen : DDZ_LightBeamInfo {
+class HDFL_Halogen : HDFL_LightBeamInfo {
     override string GetName() { return "Halogen"; }
     override int, int, int GetRadius(int type) {
         switch (type) {
@@ -59,7 +59,7 @@ class DDZ_Halogen : DDZ_LightBeamInfo {
     }
 }
 
-class DDZ_LED : DDZ_LightBeamInfo {
+class HDFL_LED : HDFL_LightBeamInfo {
     override string GetName() { return "LED"; }
     override int, int, int GetRadius(int type) {
         switch (type) {

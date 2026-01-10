@@ -1,100 +1,21 @@
-AddOptionMenu "OptionsMenu"
-{
-	Submenu "DarkDoomZ Settings", "DarkDoomZ_Settings"
+AddOptionMenu "OptionsMenu" {
+	Submenu "$MENU_HDFL", "HDFL_Flashlight_Settings"
 }
 
-OptionMenu "DarkDoomZ_Settings"
-{
-	Class "DarkDoomZ_OptionMenu"
-	Title "DarkDoomZ Settings"
-	StaticText " "
-
-	Option "Mode", "ddz_mode", "Nice_Modes"
-	Option "Setting", "ddz_preset", "Nice_Settings"
-	StaticText " "
-
-	Submenu "Advanced Settings", "DarkDoomZ_Advanced_Settings"
-	Submenu "Flashlight Settings", "DarkDoomZ_Flashlight_Settings"
-	StaticText " "
-
-	StaticText "Classic DarkDoom modes", "darkgrey"
-	StaticText "override regular setting.", "darkgrey"
-	StaticText " "
+AddOptionMenu "HDAddonMenu" {
+	Submenu "$MENU_HDFL", "HDFL_Flashlight_Settings"
 }
 
-OptionMenu "DarkDoomZ_Advanced_Settings"
-{
-	Class "DarkDoomZ_OptionMenu"
-	Title "Advanced Settings"
-	StaticText " "
+OptionMenu "HDFL_Flashlight_Settings" {
+	Title "$HDFL_MENU"
+	StaticText ""
 
-	Slider "Pre-Gain", "ddz_pregain", -255, 255, 1, 0
-	Slider "Post-Gain", "ddz_postgain", -255, 255, 1, 0
-	StaticText "Adjust initial and final light levels.", "darkgrey"
-	StaticText " "
-
-	Slider "Min. Lightlevel", "ddz_minlight", 0, 16, 1, 0
-	StaticText "Clamps darkest lightlevel to this minimum.", "darkgrey"
-	StaticText " "
-
-	Slider "Sky Sectors", "ddz_skymode", 0.0, 1.0, 0.1, 1
-	StaticText "Specifies whether adjustment applies", "darkgrey"
-	StaticText "to sky sectors. Note certain skyboxes", "darkgrey"
-	StaticText "may still be affected.", "darkgrey"
-	StaticText " "
-
-	Option "Sector Light Effects", "ddz_lighting", "Nice_Sector_Effects"
-	StaticText "Enables or disables sector light effects", "darkgrey"
-	StaticText "such as flickering or pulsing. Requires", "darkgrey"
-	StaticText "reloading the game or map.", "darkgrey"
-
+	Option "$HDFL_MENU_QUALITY", "hdfl_fl_quality", "Nice_Flashlight_Quality"
+	Option "$HDFL_MENU_PARTICLES", "hdfl_fl_particles", "YesNo"
+	Control "$HDFL_MENU_TOGGLEKEY", "hdfl_toggleflashlight"
 }
 
-OptionMenu "DarkDoomZ_Flashlight_Settings"
-{
-	Class "DarkDoomZ_OptionMenu"
-	Title "Flashlight Settings"
-	StaticText " "
-
-	Option "Quality", "ddz_fl_quality", "Nice_Flashlight_Quality"
-	DDZFlashlightOption "Type", "ddz_fl_type"
-	DDZFlashlightOption "Position", "ddz_fl_pos"
-	Control "Toggle Key", "ddz_toggleflashlight"
-}
-
-OptionValue "Nice_Modes"
-{
-	0, "Disable"
-	1, "Subtract"
-	2, "Compress"
-	3, "Clamp"
-	4, "Crush"
-	10, "DarkDoom Lite"
-	11, "DarkDoom Classic"
-	12, "DarkDoom Black"
-}
-
-OptionValue "Nice_Settings"
-{
-	0, "Disable"
-	1, "Dim"
-	2, "Murky"
-	3, "Dismal"
-	4, "Oppressive"
-	5, "Inky"
-	6, "Stygian"
-	7, "Pitch"
-	8, "Pure"
-}
-
-OptionValue "Nice_Flashlight_Quality"
-{
+OptionValue "Nice_Flashlight_Quality" {
 	0, "Simple"
 	1, "Fancy"
-}
-
-OptionValue "Nice_Sector_Effects"
-{
-	0, "Remove"
-	1, "Keep"
 }

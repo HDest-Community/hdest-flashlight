@@ -1,4 +1,4 @@
-class DarkDoomZ_Spotlight : DynamicLight {
+class HDFLSpotlight : DynamicLight {
 
     private int oldIntensity, unflickerTimer;
     private Actor followTarget;
@@ -11,33 +11,42 @@ class DarkDoomZ_Spotlight : DynamicLight {
         +DYNAMICLIGHT.SPOT
     }
 
-    static DarkDoomZ_Spotlight CreateBeam(Actor other, DDZ_LightBeamInfo beam, DDZ_MountPoint mount, int type) {
-        let light = DarkDoomZ_Spotlight(Spawn("DarkDoomZ_Spotlight", other.pos, false));
+    static HDFLSpotlight CreateBeam(Actor other, HDFL_LightBeamInfo beam, HDFL_MountPoint mount, int type) {
+        let light = HDFLSpotlight(Spawn("HDFLSpotlight", other.pos, false));
         light.followTarget = other;
         [light.args[DynamicLight.LIGHT_RED], light.args[DynamicLight.LIGHT_GREEN], light.args[DynamicLight.LIGHT_BLUE]] = beam.GetColor(type == 2);
         [light.spotInnerAngle, light.spotOuterAngle, light.args[DynamicLight.LIGHT_INTENSITY]] = beam.GetRadius(type);
         light.angle = other.angle;
         light.pitch = other.pitch;
         [light.spring, light.damping, light.inertia, light.offsetAngle, light.offsetLen, light.offsetZ] = mount.GetMountInfo();
+
+        light.UpdateSpotlight(other.pos, other.angle, other.pitch, false);
+
         return light;
     }
 
     override void Tick() {
         super.Tick();
 
-        if (followTarget && followTarget.player) {
-            if (inertia == 0) inertia = 1;
+        // Prevent invalid inertia values
+        inertia = max(inertia, 1);
 
-            UpdateSpotlight(
-                followTarget.Vec3Offset(
-                    cos(followTarget.angle + offsetAngle) * offsetLen,
-                    sin(followTarget.angle + offsetAngle) * offsetLen,
-                    sin(followTarget.pitch) + (followTarget.player.viewz - followTarget.pos.z) + offsetZ
-                ),
+        // TODO: allow flashlight beams being able to follow non-players
+        if (followTarget) {
+
+            // If following a playerpawn, offset based on camera height.
+            let offZ = followTarget.player ? followTarget.player.viewZ : 0;
+            let newPos = followTarget.vec3Angle(
+                offsetLen,
+                followTarget.angle + offsetAngle,
+                offZ + offsetZ
+            ) + followTarget.vec3Angle(
+                cos(-followTarget.pitch) * sin(-followTarget.pitch),
                 followTarget.angle,
-                followTarget.pitch,
-                getAge()
-            );
+                sin(-followTarget.pitch)
+            ) - followTarget.pos;
+
+            UpdateSpotlight(newPos, followTarget.angle, followTarget.pitch, getAge());
         }
 
         if (oldIntensity > 0 && unflickerTimer-- == 0) {
@@ -48,18 +57,18 @@ class DarkDoomZ_Spotlight : DynamicLight {
 
     void UpdateSpotlight(Vector3 targetPos, double targetAngle, double targetPitch, bool interpolate = true) {
         if (interpolate) {
-            vel += HDCore.dampedVec3Spring(pos, targetPos, vel, 1, 1);
+            vel += HDCore.dampedSpringVec3D(pos, targetPos, vel, spring, damping);
 
-            vela += HDCore.dampedSpring(angle, targetAngle, vela, spring, damping);
-            velp += HDCore.dampedSpring(pitch, targetPitch, velp, spring, damping);
+            vela += HDCore.dampedSpringDouble(angle, targetAngle, vela, spring, damping);
+            velp += HDCore.dampedSpringDouble(pitch, targetPitch, velp, spring, damping);
 
-            SetOrigin(pos + vel, true);
+            SetOrigin(pos + (vel / inertia), true);
             A_SetAngle(angle + (vela / inertia), true);
             A_SetPitch(pitch + (velp / inertia), true);
         } else {
-            SetOrigin(targetPos, true);
-            A_SetAngle(targetAngle, true);
-            A_SetPitch(targetPitch, true);
+            SetOrigin(targetPos, false);
+            A_SetAngle(targetAngle, false);
+            A_SetPitch(targetPitch, false);
         }
     }
 
