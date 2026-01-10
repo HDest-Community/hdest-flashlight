@@ -35,7 +35,7 @@ class HDFLSpotlight : DynamicLight {
         if (followTarget) {
 
             // If following a playerpawn, offset based on camera height.
-            let offZ = followTarget.player ? followTarget.player.viewZ : 0;
+            let offZ = followTarget.player ? followTarget.player.viewZ - followTarget.pos.z : 0;
             let newPos = followTarget.vec3Angle(
                 offsetLen,
                 followTarget.angle + offsetAngle,
