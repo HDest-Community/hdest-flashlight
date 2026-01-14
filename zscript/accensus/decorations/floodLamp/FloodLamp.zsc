@@ -88,11 +88,11 @@ class HDFloodLight : Actor {
             }
 
             if (particles.getBool()) {
-                if (leftInnerLight) HDCore.emitFlashlightParticles(leftInnerLight, quality: 1, startOffset: 5.0, scale: 1.5, alpha: 0.75);
-                if (leftOuterLight) HDCore.emitFlashlightParticles(leftOuterLight, quality: qual ? 1 : 3, startOffset: 5.0, scale: 1.5, alpha: 0.333);
+                if (leftInnerLight) HDCore.emitFlashlightParticles(leftInnerLight, quality: 1, startOffset: 5.0, offsetFactor: 1.5, scale: 2.0, alpha: 0.75);
+                if (leftOuterLight) HDCore.emitFlashlightParticles(leftOuterLight, quality: qual ? 1 : 3, startOffset: 5.0, offsetFactor: 1.5, scale: 2.0, alpha: 0.333);
     
-                if (rightInnerLight) HDCore.emitFlashlightParticles(rightInnerLight, quality: 1, startOffset: 5.0, scale: 1.5, alpha: 0.75);
-                if (rightOuterLight) HDCore.emitFlashlightParticles(rightOuterLight, quality: qual ? 1 : 3, startOffset: 5.0, scale: 1.5, alpha: 0.333);
+                if (rightInnerLight) HDCore.emitFlashlightParticles(rightInnerLight, quality: 1, startOffset: 5.0, offsetFactor: 1.5, scale: 2.0, alpha: 0.75);
+                if (rightOuterLight) HDCore.emitFlashlightParticles(rightOuterLight, quality: qual ? 1 : 3, startOffset: 5.0, offsetFactor: 1.5, scale: 2.0, alpha: 0.333);
             }
         } else {
             DeactivateLight(true);
