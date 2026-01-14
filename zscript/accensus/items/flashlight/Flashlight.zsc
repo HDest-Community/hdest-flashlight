@@ -153,8 +153,11 @@ class HDFlashlight : HDWeapon {
     }
 
     void resetLight() {
+        let wasActive = active;
+
         deactivateLight(true);
-        activateLight(true);
+
+        if (wasActive) activateLight(true);
     }
 
     void activateLight(bool silent = false) {
