@@ -3,7 +3,8 @@ class HDFLSpotlight : DynamicLight {
     private int oldIntensity, unflickerTimer;
     private Actor followTarget;
     private double vela, velp, spring, damping, offsetAngle, offsetLen, offsetZ;
-    private int Inertia;
+    private int inertia;
+    private bool useGunPos;
 
     Default {
         DynamicLight.Type "Point";
@@ -19,6 +20,7 @@ class HDFLSpotlight : DynamicLight {
         light.angle = other.angle;
         light.pitch = other.pitch;
         [light.spring, light.damping, light.inertia, light.offsetAngle, light.offsetLen, light.offsetZ] = mount.GetMountInfo();
+        light.useGunPos = mount.getName().left(3) ~== "gun";
 
         light.UpdateSpotlight(other.pos, other.angle, other.pitch, false);
 
@@ -36,17 +38,39 @@ class HDFLSpotlight : DynamicLight {
 
             // If following a playerpawn, offset based on camera height.
             let offZ = followTarget.player ? followTarget.player.viewZ - followTarget.pos.z : 0;
-            let newPos = followTarget.vec3Angle(
-                offsetLen,
-                followTarget.angle + offsetAngle,
-                offZ + offsetZ
-            ) + followTarget.vec3Angle(
-                cos(-followTarget.pitch) * sin(-followTarget.pitch),
-                followTarget.angle,
-                sin(-followTarget.pitch)
-            ) - followTarget.pos;
 
-            UpdateSpotlight(newPos, followTarget.angle, followTarget.pitch, getAge());
+            let hdp = HDPlayerPawn(followTarget);
+            let gun = HDWeapon(hdp.player.readyWeapon);
+            let useGun = useGunPos && hdp && gun;
+
+            let newAngle = useGun ? (hdp.gunAngle + (!gun.bWIMPY_WEAPON ? 0 : 45)) : followTarget.angle;
+            let newPitch = useGun ? (hdp.gunPitch + (!gun.bWIMPY_WEAPON ? 0 : 30)) : followTarget.pitch;
+
+            let newPos = (
+                useGun
+                    ? (
+                        (hdp.gunPos * (gun.bWIMPY_WEAPON ? 0.7 : 1.0)) /* + followTarget.vec3Angle(
+                            gun.barrelLength * 0.05,
+                            newAngle,
+                            sin(-newPitch) + offsetZ
+                        ) */ + followTarget.vec3Angle(
+                            gun.barrelWidth * offsetLen,
+                            newAngle + offsetAngle,
+                            gun.barrelDepth * offsetZ
+                        )
+                    )
+                    : followTarget.vec3Angle(
+                        offsetLen,
+                        newAngle + offsetAngle,
+                        offZ + offsetZ
+                    ) + followTarget.vec3Angle(
+                        cos(-newPitch) * sin(-newPitch),
+                        newAngle,
+                        sin(-newPitch)
+                    ) - followTarget.pos
+                );
+
+            UpdateSpotlight(newPos, newAngle, newPitch, getAge());
         }
 
         if (oldIntensity > 0 && unflickerTimer-- == 0) {

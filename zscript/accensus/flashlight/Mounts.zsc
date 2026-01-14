@@ -3,9 +3,19 @@ class HDFL_MountPoint abstract {
     abstract double, double, int, double, double, double GetMountInfo(); // [Ace] Spring, damping, inertia, offAngle, offLen, offZ.
 }
 
-class HDFL_Gun : HDFL_MountPoint {
-    override string GetName() { return "Gun"; }
-    override double, double, int, double, double, double GetMountInfo() { return 0.75, 0.666, 2, 0, 12, -12; }
+class HDFL_GunLeft : HDFL_MountPoint {
+    override string GetName() { return "Gun (Left)"; }
+    override double, double, int, double, double, double GetMountInfo() { return 1, 1, 1, 90, 1, 0; }
+}
+
+class HDFL_GunRight : HDFL_MountPoint {
+    override string GetName() { return "Gun (Right)"; }
+    override double, double, int, double, double, double GetMountInfo() { return 1, 1, 1, -90, 1, 0; }
+}
+
+class HDFL_GunBottom : HDFL_MountPoint {
+    override string GetName() { return "Gun (Bottom)"; }
+    override double, double, int, double, double, double GetMountInfo() { return 1, 1, 1, 0, 0, -1; }
 }
 
 class HDFL_HandheldLeft : HDFL_MountPoint {
