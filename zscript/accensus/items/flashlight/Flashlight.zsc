@@ -198,6 +198,8 @@ class HDFlashlight : HDWeapon {
     void setMountPoint(int mountIndex) {
         weaponStatus[FLProp_MountPoint] = abs(mountIndex % handler.mounts.size());
 
+        A_Log("Moved Flashlight to: "..handler.mounts[weaponStatus[FLProp_MountPoint]].getName());
+
         resetLight();
     }
 
