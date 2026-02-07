@@ -1,9 +1,9 @@
 AddOptionMenu "OptionsMenu" {
-	Submenu "$MENU_HDFL", "HDFL_Flashlight_Settings"
+	Submenu "$HDFL_MENU", "HDFL_Flashlight_Settings"
 }
 
 AddOptionMenu "HDAddonMenu" {
-	Submenu "$MENU_HDFL", "HDFL_Flashlight_Settings"
+	Submenu "$HDFL_MENU", "HDFL_Flashlight_Settings"
 }
 
 OptionMenu "HDFL_Flashlight_Settings" {
