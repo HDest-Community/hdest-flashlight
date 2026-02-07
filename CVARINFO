@@ -1,2 +1,5 @@
 server int hdfl_fl_quality = 1;
 server bool hdfl_fl_particles = true;
+
+server bool hdfl_allowBackpacks = true;
+server bool hdm_enable_flashlight = true;
