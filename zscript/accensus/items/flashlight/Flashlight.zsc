@@ -17,6 +17,8 @@ class HDFlashlight : HDWeapon {
     private HDFLSpotlight innerLight, outerLight;
     private HDFLDataHandler handler;
 
+    private Array<name> handsFreeClasses;
+
     default {
         +HDWeapon.FITSINBACKPACK
         +Inventory.INVBAR
@@ -38,13 +40,42 @@ class HDFlashlight : HDWeapon {
     }
 
     override bool use(bool pickup) {
+
+        // if the flashlight is already picked up & owned,
+        // and the player isn't intending on inspecting the flashlight
         if (!pickup && owner && !(owner.player.cmd.buttons & BT_USE)) {
+
+            // If the flashlight is currently held in hand but they are not free, quit.
+            if (
+                (handler.mounts[weaponStatus[FLProp_MountPoint]].getName().left(4) ~== "hand")
+                && !(
+                    owner.player.readyWeapon.bWIMPY_WEAPON
+                    || HDCore.isAnyChildClass(owner.player.readyWeapon.getClassName(), handsFreeClasses)
+                    || owner.player.readyWeapon.resolveState("SwapPistols")
+                )
+            ) {
+                return false;
+            }
+
+            // If the flashlight is currently mounted on a gun, but one isn't currently equipped, quit.
+            if (
+                handler.mounts[weaponStatus[FLProp_MountPoint]].getName().left(3) ~== "gun"
+                && (
+                    !HDWeapon(owner.player.readyWeapon)
+                    || owner.player.readyWeapon.bMELEEWEAPON
+                )
+            ) {
+                return false;
+            }
+
+            // Toggle the flashlight
             if (active) {
                 deactivateLight();
             } else {
                 activateLight();
             }
 
+            // Return that this process has been handled.
             return false;
         }
 
@@ -106,17 +137,59 @@ class HDFlashlight : HDWeapon {
 
     override void beginPlay() {
         if (!handler) handler = HDFLDataHandler(StaticEventHandler.find('HDFLDataHandler'));
-        
+
         super.beginPlay();
+
+        if (!handsFreeClasses.size()) {
+            handsFreeClasses.clear();
+
+            handsFreeClasses.push('NullWeapon');
+            handsFreeClasses.push('HDFist');
+            handsFreeClasses.push('HDHandgun');
+        }
     }
 
     override void tick() {
         super.tick();
 
+        // Initialize if needed
+        if (!handler)   handler   = HDFLDataHandler(StaticEventHandler.find('HDFLDataHandler'));
         if (!quality)   quality   = CVar.getCvar("hdfl_fl_quality");
         if (!particles) particles = CVar.getCvar("hdfl_fl_particles");
 
+        // If the flashlight isn't activated, quit.
         if (!active) return;
+
+        // If the flashlight gets dropped or runs out of batteries, deactivate and quit.
+        if (!owner || weaponStatus[FLProp_Battery] < 1) {
+            deactivateLight(true);
+            return;
+        }
+
+        // If flashlight is held in hand and hands are already full, deactivate and quit.
+        if (
+            handler.mounts[weaponStatus[FLProp_MountPoint]].getName().left(4) ~== "hand"
+            && !(
+                owner.player.readyWeapon.bWIMPY_WEAPON
+                || HDCore.isAnyChildClass(owner.player.readyWeapon.getClassName(), handsFreeClasses)
+                || owner.player.readyWeapon.resolveState("SwapPistols")
+            )
+        ) {
+            deactivateLight();
+            return;
+        }
+
+        // If flashlight is mounted on a gun, but no gun is held in hands, deactivate and quit.
+        if (
+            handler.mounts[weaponStatus[FLProp_MountPoint]].getName().left(3) ~== "gun"
+            && (
+                !HDWeapon(owner.player.readyWeapon)
+                || owner.player.readyWeapon.bMELEEWEAPON
+            )
+        ) {
+            deactivateLight();
+            return;
+        }
 
         int qual = quality.getInt();
 
@@ -127,28 +200,26 @@ class HDFlashlight : HDWeapon {
             oldQuality = qual;
         }
 
-        if (owner && weaponStatus[FLProp_Battery] > 0) {
+        // Drain the battery
+        if (weaponStatus[FLProp_DrainTicker]++ > 6300) {
+            weaponStatus[FLProp_Battery]--;
+            weaponStatus[FLProp_DrainTicker] -= 6300;
+        }
 
-            if (weaponStatus[FLProp_DrainTicker]++ > 6300) {
-                weaponStatus[FLProp_Battery]--;
-                weaponStatus[FLProp_DrainTicker] -= 6300;
-            }
+        // Handle Low Battery Flicker
+        if (weaponStatus[FLProp_Battery] < 6 && random(0, 1000) < (3.0 ** (6 - weaponStatus[FLProp_Battery]))) {
+            int duration = (6 - weaponStatus[FLProp_Battery]) * random(1, 4);
+            double minFac = weaponStatus[FLProp_Battery] / 10.0;
+            double maxFac = minFac * 1.6;
 
-            if (weaponStatus[FLProp_Battery] < 6 && random(0, 1000) < (3.0 ** (6 - weaponStatus[FLProp_Battery]))) {
-                int duration = (6 - weaponStatus[FLProp_Battery]) * random(1, 4);
-                double minFac = weaponStatus[FLProp_Battery] / 10.0;
-                double maxFac = minFac * 1.6;
+            if (outerLight) outerLight.flicker(duration, minFac, maxFac);
+            if (innerLight) innerLight.flicker(duration, minFac, maxFac);
+        }
 
-                if (outerLight) outerLight.flicker(duration, minFac, maxFac);
-                if (innerLight) innerLight.flicker(duration, minFac, maxFac);
-            }
-
-            if (particles.getBool()) {
-                if (outerLight) HDCore.emitFlashlightParticles(outerLight, quality: qual ? 1 : 3, offsetFactor: qual ? 1.25 : 1.5, alpha: (owner.checkLocalView() ? 0.25 : 0.5));
-                if (innerLight) HDCore.emitFlashlightParticles(innerLight, quality: 2, alpha: (owner.checkLocalView() ? 0.5 : 0.75));
-            }
-        } else {
-            deactivateLight(true);
+        // Draw Atmospheric haze particles
+        if (particles.getBool()) {
+            if (outerLight) HDCore.emitFlashlightParticles(outerLight, quality: qual ? 1 : 3, offsetFactor: qual ? 1.25 : 1.5, alpha: (owner.checkLocalView() ? 0.25 : 0.5));
+            if (innerLight) HDCore.emitFlashlightParticles(innerLight, quality: 2, alpha: (owner.checkLocalView() ? 0.5 : 0.75));
         }
     }
 

@@ -47,32 +47,36 @@ class HDFLSpotlight : DynamicLight {
             let offZ = followTarget.player ? followTarget.player.viewZ - followTarget.pos.z : 0;
 
             let hdp = HDPlayerPawn(followTarget);
-            let gun = HDWeapon(hdp.player.readyWeapon);
-            let useGun = useGunPos && hdp && gun;
+            let gun = hdp ? HDWeapon(hdp.player.readyWeapon) : null;
+            let nextGun = hdp ? HDWeapon(hdp.player.pendingWeapon) : null;
+            let useGun = useGunPos && hdp && gun && !gun.bMELEEWEAPON;
+            let loweredWep = (gun is 'NullWeapon' || nextGun is 'NullWeapon' || (gun && gun.bWIMPY_WEAPON) || (nextGun && nextGun.bWIMPY_WEAPON));
 
-            let newAngle = useGun ? (hdp.gunAngle + (!gun.bWIMPY_WEAPON ? 0 : 45)) : followTarget.angle;
-            let newPitch = useGun ? (hdp.gunPitch + (!gun.bWIMPY_WEAPON ? 0 : 30)) : followTarget.pitch;
+            let newAngle = useGun ? (hdp.gunAngle + (loweredWep ? 45 : 0)) : followTarget.angle;
+            let newPitch = useGun ? (hdp.gunPitch + (loweredWep ? 30 : 0)) : followTarget.pitch;
 
             let newPos = (
-                useGun
+                (
+                    useGun
                     ? (
-                        (hdp.gunPos * (gun.bWIMPY_WEAPON ? 0.7 : 1.0)) /* + followTarget.vec3Angle(
+                        (hdp.gunPos * (loweredWep ? 0.7 : 1.0)) + followTarget.vec3Angle(
                             gun.barrelLength * 0.05,
                             newAngle,
                             sin(-newPitch) + offsetZ
-                        ) */ + followTarget.vec3Angle(
+                        ) + followTarget.vec3Angle(
                             gun.barrelWidth * offsetLen,
                             newAngle + offsetAngle,
                             gun.barrelDepth * offsetZ
-                        )
+                        ) - followTarget.pos
                     )
                     : followTarget.vec3Angle(
                         offsetLen,
                         newAngle + offsetAngle,
                         offZ + offsetZ
-                    ) + followTarget.vec3Angle(
-                        cos(-newPitch) * sin(-newPitch),
-                        newAngle,
+                    )
+                ) + followTarget.vec3Angle(
+                    cos(-newPitch) * sin(-newPitch),
+                    newAngle,
                         sin(-newPitch)
                     ) - followTarget.pos
                 );
