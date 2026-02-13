@@ -78,7 +78,7 @@ class HDFlashlight : HDWeapon {
         weaponStatus[FLProp_Battery] = 20;
 
         for (let i = 0; i < handler.beams.size(); i++) {
-            if (handler.beams[i].getName() == "Incandescent (Yellow)") {
+            if (handler.beams[i].getName() == "Incandescent (2700K)") {
                 weaponStatus[FLProp_Beam] = i;
                 break;
             }

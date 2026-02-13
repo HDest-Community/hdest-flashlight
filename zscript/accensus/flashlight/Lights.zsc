@@ -15,10 +15,17 @@ class HDFLSpotlight : DynamicLight {
     static HDFLSpotlight CreateBeam(Actor other, HDFL_LightBeamInfo beam, HDFL_MountPoint mount, int type) {
         let light = HDFLSpotlight(Spawn("HDFLSpotlight", other.pos, false));
         light.followTarget = other;
-        [light.args[DynamicLight.LIGHT_RED], light.args[DynamicLight.LIGHT_GREEN], light.args[DynamicLight.LIGHT_BLUE]] = beam.GetColor(type == 2);
+
+        let color = beam.GetColor(type == 2);
+        light.args[DynamicLight.LIGHT_RED]   = color.r;
+        light.args[DynamicLight.LIGHT_GREEN] = color.g;
+        light.args[DynamicLight.LIGHT_BLUE]  = color.b;
+
         [light.spotInnerAngle, light.spotOuterAngle, light.args[DynamicLight.LIGHT_INTENSITY]] = beam.GetRadius(type);
+
         light.angle = other.angle;
         light.pitch = other.pitch;
+
         [light.spring, light.damping, light.inertia, light.offsetAngle, light.offsetLen, light.offsetZ] = mount.GetMountInfo();
         light.useGunPos = mount.getName().left(3) ~== "gun";
 

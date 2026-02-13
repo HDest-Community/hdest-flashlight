@@ -1,75 +1,89 @@
 class HDFL_LightBeamInfo abstract {
     abstract clearscope string GetName();
     abstract int, int, int GetRadius(int type); // [Ace] 0 = simple, 1 = quality, inner beam, 2 = quality, outer beam;
-    abstract int, int, int GetColor(bool secondary);
-}
-
-class HDFL_RedFilter : HDFL_LightBeamInfo {
-    override string GetName() { return "Red filter"; }
-    override int, int, int GetRadius(int type) {
-        switch (type) {
-            default: return 5, 40, 192;
-            case 1: return 0, 20, 256;
-            case 2: return 10, 60, 128;
-        }
-    }
-    override int, int, int GetColor(bool secondary) {
-        // [Ace] Ternaries don't work here.
-        if (secondary) { return 144, 27, 25; }
-        return 192, 36, 34;
-    }
+    abstract Color GetColor(bool secondary);
 }
 
 class HDFL_Incandescent : HDFL_LightBeamInfo {
-    override string GetName() { return "Incandescent (Yellow)"; }
+    override string GetName() { return "Incandescent (2700K)"; }
     override int, int, int GetRadius(int type) {
         switch (type) {
             default: return 7, 35, 256;
-            case 1: return 0, 25, 384;
-            case 2: return 15, 45, 128;
+            case 1: return 0, 25, 256;
+            case 2: return 15, 45, 384;
         }
     }
-    override int, int, int GetColor(bool secondary) {
-        if (secondary) { return 191, 160, 127; }
-        return 255, 214, 170;
+    override Color GetColor(bool secondary) {
+        return HDCore.plancksLaw(secondary ? 2700 : 4500);
     }
 }
-
-class HDFL_IncandescentBlue : HDFL_Incandescent {
-    override string GetName() { return "Incandescent (Blue)"; }
-    override int, int, int GetColor(bool secondary) {
-        if (secondary) { return 127, 160, 191; }
-        return 170, 214, 255;
-    }
-}
-
 
 class HDFL_Halogen : HDFL_LightBeamInfo {
-    override string GetName() { return "Halogen"; }
+    override string GetName() { return "Halogen (3000K)"; }
     override int, int, int GetRadius(int type) {
         switch (type) {
             default: return 5, 40, 448;
-            case 1: return 0, 20, 512;
-            case 2: return 10, 60, 384;
+            case 1: return 0, 20, 384;
+            case 2: return 10, 60, 512;
         }
     }
-    override int, int, int GetColor(bool secondary) {
-        if (secondary) { return 191, 180, 168; }
-        return 255, 241, 224;
+    override Color GetColor(bool secondary) {
+        return HDCore.plancksLaw(secondary ? 3000 : 5000);
     }
 }
 
-class HDFL_LED : HDFL_LightBeamInfo {
-    override string GetName() { return "LED"; }
+class HDFL_Fluorescent : HDFL_LightBeamInfo {
+    override string GetName() { return "Fluorescent (5500K)"; }
     override int, int, int GetRadius(int type) {
         switch (type) {
-            default: return 7, 45, 448;
-            case 1: return 0, 15, 640;
-            case 2: return 15, 75, 256;
+            default: return 5, 40, 448;
+            case 1: return 0, 20, 384;
+            case 2: return 10, 60, 512;
         }
     }
-    override int, int, int GetColor(bool secondary) {
-        if (secondary) { return 186, 191, 191; }
-        return 248, 255, 255;
+    override Color GetColor(bool secondary) {
+        return HDCore.plancksLaw(secondary ? 5500 : 6500);
+    }
+}
+
+class HDFL_WarmLED : HDFL_LightBeamInfo {
+    override string GetName() { return "Warm White LED (4000K)"; }
+    override int, int, int GetRadius(int type) {
+        switch (type) {
+            default: return 7, 45, 512;
+            case 1: return 0, 15, 448;
+            case 2: return 15, 75, 640;
+        }
+    }
+    override Color GetColor(bool secondary) {
+        return HDCore.plancksLaw(secondary ? 4000 : 5000);
+    }
+}
+
+class HDFL_NeutralLED : HDFL_LightBeamInfo {
+    override string GetName() { return "Neutral White LED (4700K)"; }
+    override int, int, int GetRadius(int type) {
+        switch (type) {
+            default: return 7, 45, 512;
+            case 1: return 0, 15, 448;
+            case 2: return 15, 75, 640;
+        }
+    }
+    override Color GetColor(bool secondary) {
+        return HDCore.plancksLaw(secondary ? 4700 : 6500);
+    }
+}
+
+class HDFL_CoolLED : HDFL_LightBeamInfo {
+    override string GetName() { return "Cool White LED (8000K)"; }
+    override int, int, int GetRadius(int type) {
+        switch (type) {
+            default: return 7, 45, 512;
+            case 1: return 0, 15, 448;
+            case 2: return 15, 75, 640;
+        }
+    }
+    override Color GetColor(bool secondary) {
+        return HDCore.plancksLaw(secondary ? 7500 : 8000);
     }
 }

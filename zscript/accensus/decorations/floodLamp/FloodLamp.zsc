@@ -139,7 +139,7 @@ class HDFloodLight : Actor {
 
         int qual = quality.getInt();
 
-        let beam = new ("HDFL_LED");
+        let beam = new ("HDFL_CoolLED");
         let leftMount = new ("HDFL_ShoulderLeft");
         let rightMount = new ("HDFL_ShoulderRight");
 
