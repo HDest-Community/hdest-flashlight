@@ -127,12 +127,10 @@ class HDFlashlight : HDWeapon {
         vector2 bob = hpl.wepbob * 0.3;
         bob.y += useOffset;
         
-        sb.drawImage("HDFLA0", bob, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, scale: (3.0, 3.0));
+        sb.drawImage("HDFLA0", bob, sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER, scale: (3.0, 3.0));
 
         int bat = hdw.weaponStatus[FLProp_Battery];
-        if (bat >= 0) {
-            sb.drawImage(AceCore.getBatteryColor(bat), (0, 30) + bob, sb.DI_SCREEN_CENTER | sb.DI_ITEM_CENTER, scale: (1.5, 1.5));
-        }
+        if (bat >= 0) sb.drawImage(HDCore.getBatteryIcon(bat), (0, 30) + bob, sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER, scale: (1.5, 1.5));
     }
 
     override void beginPlay() {
@@ -307,7 +305,7 @@ class HDFlashlight : HDWeapon {
                     invoker.useOffset = off * 2 / 3;
                 }
 
-                A_WeaponReady(WRF_ALL | WRF_NOFIRE);
+                A_WeaponReady(WRF_ALL|WRF_NOFIRE);
             }
             goto readyEnd;
 
