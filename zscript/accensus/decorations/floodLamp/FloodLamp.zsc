@@ -175,8 +175,8 @@ class HDFloodLight : Actor {
         let a = (side ? 80 : -80) + angle;
         light.UpdateSpotlight(
             Vec3Offset(
-                cos(a) * offset,
-                sin(a) * offset,
+                cos(pitch) * cos(a) * offset,
+                cos(pitch) * sin(a) * offset,
                 sin(pitch) + height - 10
             ),
             angle,
