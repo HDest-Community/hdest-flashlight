@@ -32,3 +32,4 @@ Small mod that adds a Flashlight item that requires Cell Batteries to operate (p
 - Accensus: Nice logo for DarkDoomZ
 - Pillowblaster: Flashlight Sprite
 - XLightningStormL: Flood Lamp Sprite
+- elend: Worklight Sprites (Based on Sketchfab models by GabeTheSerrano)
