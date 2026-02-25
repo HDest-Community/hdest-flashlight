@@ -2,6 +2,7 @@
 
 TAG_FLASHLIGHT          = "Flashlight";
 TAG_FLOODLIGHT          = "Floodlight";
+TAG_WORKLIGHT           = "Worklight";
 
 PICKUP_FLASHLIGHT       = "You picked up a flashlight.";
 

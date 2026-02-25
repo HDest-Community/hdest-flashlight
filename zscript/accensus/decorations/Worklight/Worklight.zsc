@@ -1,0 +1,195 @@
+class HDWorklight : Actor {
+
+    private bool active;
+    private int battery;
+    private int drainTicker;
+
+    private transient CVar quality, particles;
+    private int oldQuality;
+
+    private HDFLSpotlight innerLight, outerLight;
+
+    default {
+        +SOLID
+        +FRIENDLY
+        +SHOOTABLE
+        +DONTTHRUST
+        +NOTARGET
+        // +NODAMAGE
+        +NOBLOOD
+        +FORCEYBILLBOARD
+
+        tag "$TAG_WORKLIGHT";
+
+        health 1;
+        
+        radius 10;
+        height 40;
+        mass 50;
+    }
+    
+    override void postBeginPlay() {
+        super.postBeginPlay();
+
+        if (!quality) quality = CVar.getCvar("hdfl_fl_quality");
+
+        battery = random(-1, 10);
+
+        if (battery > 0 && random() > (curSector.lightLevel * 2)) activateLight(true);
+    }
+
+    override void tick() {
+
+        super.tick();
+
+        if (!quality)   quality   = CVar.getCvar("hdfl_fl_quality");
+        if (!particles) particles = CVar.getCvar("hdfl_fl_particles");
+
+        if (isFrozen()) return;
+
+        if (health < 1) return;
+
+        if (active && battery > 0) {
+            frame = 0;
+
+            int qual = quality.getInt();
+
+            // Re-initialize light if settings changed
+            if (qual != oldQuality) {
+                deactivateLight(true);
+                activateLight(true);
+
+                oldQuality = qual;
+            }
+
+            if (innerLight) updateLight(innerLight);
+            if (outerLight) updateLight(outerLight);
+
+            if (drainTicker++ > 6300) {
+                battery--;
+                drainticker -= 6300;
+            }
+
+            if (battery < 6 && random(0, 1000) < (3.0 ** (6 - battery))) {
+                int duration = (6 - battery) * random(1, 4);
+                double minFac = battery / 10.0;
+                double maxFac = minFac * 1.6;
+
+                if (innerLight) innerLight.flicker(duration, minFac, maxFac);
+                if (outerLight) outerLight.flicker(duration, minFac, maxFac);
+
+                frame = 1;
+            }
+
+            if (particles.getBool()) {
+                if (innerLight) HDCore.emitFlashlightParticles(innerLight, quality: 1, startOffset: 5.0, offsetFactor: 1.5, scale: 2.0, alpha: 0.5);
+                if (outerLight) HDCore.emitFlashlightParticles(outerLight, quality: qual ? 1 : 3, startOffset: 5.0, offsetFactor: 1.5, scale: 2.0, alpha: 0.333);
+            }
+        } else {
+            DeactivateLight(true);
+        }
+    }
+
+    override bool used(Actor user) {
+
+        if (user is 'HDPlayerPawn' && HDPlayerPawn(user).player.crouchFactor < 0.7) {
+            let bat = user.findInventory('HDBattery');
+            if (battery < 0 && bat) {
+                battery = HDMagAmmo(bat).takeMag(false);
+            } else {
+                HDBattery.spawnMag(user, 'HDBattery', battery);
+                battery = -1;
+            }
+        } else {
+            toggleLight();
+        }
+
+        return super.used(user);
+    }
+
+    override void onDestroy() {
+        super.onDestroy();
+        
+        deactivateLight(true);
+    }
+
+    void toggleLight(bool silent = false) {
+        if (health > 0) {
+            if (active || battery <= 0) {
+                deactivateLight(silent);
+            } else {
+                activateLight(silent);
+            }
+        }
+    }
+
+    void activateLight(bool silent = false) {
+        if (!silent) A_StartSound("HDFL/Flashlight/Click", CHAN_AUTO);
+
+        active = true;
+
+        int qual = quality.getInt();
+
+        let beam = new ("HDFL_CoolLED");
+        let mount = new ("HDFL_HelmetTop");
+
+        if (beam && mount) {
+            if (!outerLight) outerLight = HDFLSpotlight.createBeam(self, beam, mount, qual == 1);
+            
+            if (qual == 1) {
+                if (!innerLight) innerLight = HDFLSpotlight.createBeam(self, beam, mount, 2);
+            }
+        }
+
+        setStateLabel('lightOn');
+    }
+
+    void deactivateLight(bool silent = false) {
+        if (!silent) A_StartSound("HDFL/Flashlight/Click", CHAN_AUTO);
+
+        active = false;
+
+        if (innerLight) innerLight.destroy();
+        if (outerLight) outerLight.destroy();
+
+        setStateLabel('lightOff');
+    }
+
+    void updateLight(HDFLSpotlight light) {
+        let offset = 5;
+
+        light.UpdateSpotlight(
+            Vec3Offset(
+                cos(pitch) * cos(angle) * offset,
+                cos(pitch) * sin(angle) * offset,
+                sin(pitch) + (height * 0.5)
+            ),
+            angle,
+            pitch,
+            false
+        );
+    }
+
+    states {
+        spawn:
+            WLGH B 1;
+            loop;
+        
+        lightOn:
+            #### A 1;
+            loop;
+
+        lightOff:
+            #### B 1;
+            loop;
+
+        death:
+            #### C -1 {
+                active = false;
+
+                if (innerLight) innerLight.destroy();
+                if (outerLight) outerLight.destroy();
+            }
+            stop;
+    }
+}
