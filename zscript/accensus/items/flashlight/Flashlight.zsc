@@ -170,24 +170,24 @@ class HDFlashlight : HDWeapon {
             // If flashlight is held in hand and hands are already full, deactivate and quit.
             if (
                 handler.mounts[weaponStatus[FLProp_MountPoint]].getName().left(4) ~== "hand"
-            && !(
-                owner.player.readyWeapon.bWIMPY_WEAPON
-                || HDCore.isAnyChildClass(owner.player.readyWeapon.getClassName(), handsFreeClasses)
-                || owner.player.readyWeapon.resolveState("SwapPistols")
-            )
-        ) {
-            deactivateLight();
-            return;
-        }
-
-        // If flashlight is mounted on a gun, but no gun is held in hands, deactivate and quit.
-        if (
-            handler.mounts[weaponStatus[FLProp_MountPoint]].getName().left(3) ~== "gun"
-            && (
-                !HDWeapon(owner.player.readyWeapon)
-                || owner.player.readyWeapon.bMELEEWEAPON
-            )
-        ) {
+                && !(
+                    owner.player.readyWeapon.bWIMPY_WEAPON
+                    || HDCore.isAnyChildClass(owner.player.readyWeapon.getClassName(), handsFreeClasses)
+                    || owner.player.readyWeapon.resolveState("SwapPistols")
+                )
+            ) {
+                deactivateLight();
+                return;
+            }
+    
+            // If flashlight is mounted on a gun, but no gun is held in hands, deactivate and quit.
+            if (
+                handler.mounts[weaponStatus[FLProp_MountPoint]].getName().left(3) ~== "gun"
+                && (
+                    !HDWeapon(owner.player.readyWeapon)
+                    || owner.player.readyWeapon.bMELEEWEAPON
+                )
+            ) {
                 deactivateLight();
                 return;
             }
@@ -271,7 +271,7 @@ class HDFlashlight : HDWeapon {
     void setMountPoint(int mountIndex) {
         weaponStatus[FLProp_MountPoint] = abs(mountIndex % handler.mounts.size());
 
-        A_Log("Moved Flashlight to: "..handler.mounts[weaponStatus[FLProp_MountPoint]].getName());
+        A_Log("Moved Flashlight to: "..handler.mounts[weaponStatus[FLProp_MountPoint]].getName(), true);
 
         resetLight();
     }
