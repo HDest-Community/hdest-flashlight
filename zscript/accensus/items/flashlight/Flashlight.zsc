@@ -164,9 +164,12 @@ class HDFlashlight : HDWeapon {
             return;
         }
 
-        // If flashlight is held in hand and hands are already full, deactivate and quit.
-        if (
-            handler.mounts[weaponStatus[FLProp_MountPoint]].getName().left(4) ~== "hand"
+        // Only worry about invalid mounting points if there's actually a player with a valid weapon to invalidate them
+        if (owner.player && owner.player.readyWeapon) {
+
+            // If flashlight is held in hand and hands are already full, deactivate and quit.
+            if (
+                handler.mounts[weaponStatus[FLProp_MountPoint]].getName().left(4) ~== "hand"
             && !(
                 owner.player.readyWeapon.bWIMPY_WEAPON
                 || HDCore.isAnyChildClass(owner.player.readyWeapon.getClassName(), handsFreeClasses)
@@ -185,8 +188,9 @@ class HDFlashlight : HDWeapon {
                 || owner.player.readyWeapon.bMELEEWEAPON
             )
         ) {
-            deactivateLight();
-            return;
+                deactivateLight();
+                return;
+            }
         }
 
         int qual = quality.getInt();
