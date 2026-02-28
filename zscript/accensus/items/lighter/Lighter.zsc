@@ -1,0 +1,366 @@
+class HDLighter : HDWeapon {
+
+    enum LighterProps {
+        LTRS_STATUS = 0,
+        LTRS_FUEL   = 1,
+
+        LTRF_OPEN   = 1,
+        LTRF_LIT    = 2
+    }
+
+    private HDLighterLight innerLight, outerLight;
+
+    private transient int oldQuality;
+    private transient CVar quality;
+
+    default {
+        +HDWeapon.FITSINBACKPACK
+        +Inventory.INVBAR
+        +Weapon.WIMPY_WEAPON
+        -HDWeapon.DROPTRANSLATION
+
+        Tag "$TAG_LIGHTER";
+
+        Inventory.icon "LTRPA0";
+        Inventory.pickupSound "weapons/pocket";
+        Inventory.pickupMessage "$PICKUP_LIGHTER";
+        HDWeapon.refId "ltr";
+
+        Scale 0.1;
+    }
+
+    override bool addSpareWeapon(actor newOwner) {
+        return addSpareWeaponRegular(newOwner);
+    }
+
+    override HDWeapon getSpareWeapon(actor newOwner, bool reverse, bool doSelect) {
+        return getSpareWeaponRegular(newOwner, reverse, doSelect);
+    }
+
+    override string, double getPickupSprite() {
+        return "LTRPA0", 0.5;
+    }
+
+    override string getHelpText() {
+        localizeHelp();
+        return WEPHELP_FIRE..StringTable.Localize("$LTRWH_FIRE")
+        ..WEPHELP_ALTFIRE..StringTable.Localize(isOpen() ? "$LTRWH_CLOSE" : "$LTRWH_OPEN");
+    }
+
+    override double weaponBulk() {
+        return ENC_STIMPACK;
+    }
+
+    override void AttachToOwner(actor other) {
+        super.AttachToOwner(other);
+
+        resetLight();
+    }
+
+    override Inventory createTossable(int amt) {
+        let i = super.createTossable(amt);
+
+        let lighter = HDLighter(i);
+        if (lighter && lighter.isLit()) {
+
+            lighter.deactivateLight();
+            lighter.weaponStatus[LTRS_STATUS] |= LTRF_LIT;
+
+            int qual = quality.getInt();
+            let light = new('HDFL_Candlelight');
+            let mount = new('HDFL_HelmetTop');
+
+            if (!lighter.outerLight) lighter.outerLight = HDLighterLight.create(lighter, light, mount, qual == 1);
+            if (qual == 1 && !lighter.innerLight) lighter.innerLight = HDLighterLight.create(lighter, light, mount, 2);
+        }
+
+        return i;
+    }
+
+    override void initializeWepStats(bool idfa) {
+        setFuel(TICRATE * 60 * 60);
+    }
+
+    override void drawHUDStuff(HDStatusBar sb, HDWeapon hdw, HDPlayerPawn hpl) {
+		sb.drawwepnum(getFuel(), TICRATE * 60 * 60);
+    }
+
+    override void tick() {
+        super.tick();
+
+        // Initialize if needed
+        if (!quality) quality = CVar.getCvar("hdfl_fl_quality");
+
+        // If the Lighter isn't activated, quit.
+        if (!isLit()) return;
+
+        // If the Lighter runs out of fuel, or very rarely, deactivate and quit.
+        if (getFuel() < 1 || (getFuel() / 256) < random[hdflrand]()) {
+            deactivateLight();
+            return;
+        }
+
+        int qual = quality.getInt();
+
+        // Re-initialize light if settings changed
+        if (qual != oldQuality) {
+            resetLight();
+
+            oldQuality = qual;
+        }
+
+        // Drain some fuel
+        setFuel(getFuel() - 1);
+    }
+
+    clearscope bool isLit() {
+        return weaponStatus[LTRS_STATUS]&LTRF_LIT;
+    }
+
+    clearscope bool isOpen() {
+        return weaponStatus[LTRS_STATUS]&LTRF_OPEN;
+    }
+
+    clearscope int getFuel() {
+        return weaponStatus[LTRS_FUEL];
+    }
+
+    void setFuel(int amount) {
+        weaponStatus[LTRS_FUEL] = amount;
+    }
+
+    void openLid(bool silent = false) {
+        if (isOpen()) return;
+
+        if (!silent && owner) owner.A_StartSound("HDFL/Lighter/Open", CHAN_AUTO);
+
+        weaponStatus[LTRS_STATUS] |= LTRF_OPEN;
+    }
+
+    void closeLid(bool silent = false) {
+        if (!isOpen()) return;
+
+        if (!silent && owner) owner.A_StartSound("HDFL/Lighter/Close", CHAN_AUTO);
+
+        weaponStatus[LTRS_STATUS] &= ~LTRF_OPEN;
+
+        deactivateLight();
+    }
+
+    void resetLight() {
+        let wasLit = isLit();
+
+        deactivateLight();
+
+        if (wasLit) activateLight(true);
+    }
+
+    void activateLight(bool silent = false) {
+        if (!isOpen() || isLit()) return;
+
+        if (!silent && owner) owner.A_StartSound("HDFL/Lighter/Light", CHAN_AUTO);
+
+        if (getFuel() > 0) {
+            weaponStatus[LTRS_STATUS] |= LTRF_LIT;
+
+            int qual = quality.getInt();
+            let light = new('HDFL_Candlelight');
+            let mount = new('HDFL_HelmetTop');
+
+            if (!outerLight) outerLight = HDLighterLight.create(owner, light, mount, qual == 1);
+            if (qual == 1 && !innerLight) innerLight = HDLighterLight.create(owner, light, mount, 2);
+        }
+    }
+
+    void deactivateLight() {
+        if (!isLit()) return;
+
+        weaponStatus[LTRS_STATUS] &= ~LTRF_LIT;
+
+        if (outerLight) outerLight.destroy();
+        if (innerLight) innerLight.destroy();
+    }
+
+    override void OnDestroy() {
+        super.onDestroy();
+
+        deactivateLight();
+    }
+
+    override void travelled() {
+        super.travelled();
+
+        if (isLit()) activateLight(true);
+    }
+
+    states {
+        spawn:
+            LTRP A 0 {
+                invoker.frame = invoker.isOpen();
+            }
+            #### # -1 A_JumpIf(invoker.isLit(), "spawnLit");
+            wait;
+        
+        spawnLit:
+            #### EFG random(4, 6) A_JumpIf(!invoker.isLit(), "spawn");
+            loop;
+
+        select0:
+            LTRG A 0 {
+                if (invoker.isLit()) A_Overlay(PSP_FLASH, "flame", true);
+
+                invoker.resetLight();
+
+                player.FindPSprite(PSP_WEAPON).frame = invoker.isOpen() ? 3 : 0;
+            }
+            goto select0small;
+        
+        deselect0:
+            LTRG A 0 {
+                player.FindPSprite(PSP_WEAPON).frame = invoker.isOpen() ? 3 : 0;
+            }
+            LTRG # 0 A_JumpIf(!(invoker.weaponStatus[LTRS_STATUS]&(LTRF_LIT|LTRF_OPEN)) || player.pendingWeapon is 'NullWeapon', "deselect0small");
+            #### CB 4;
+            #### A 4 {
+                invoker.closeLid();
+            }
+            goto deselect0small;
+
+        ready:
+            LTRG A 1 {
+                if (pressingUser3()) {
+                    A_MagManager("");
+                    return;
+                }
+
+                player.FindPSprite(PSP_WEAPON).frame = invoker.isOpen() ? 3 : 0;
+
+                A_WeaponReady(WRF_ALL);
+            }
+            goto readyEnd;
+
+        fire:
+            #### # 0 A_JumpIf(!invoker.isOpen(), "nope");
+            #### C random(3, 5);
+            #### D random(4, 6) {
+                A_StartSound("HDFL/Lighter/light", CHAN_AUTO);
+
+                if (!invoker.isLit() && (invoker.getFuel() / 500) > random[hdflrand]()) {
+                    invoker.activateLight();
+                    A_Overlay(PSP_FLASH, "light", true);
+                }
+            }
+            goto readyEnd;
+            // #### # 0 A_JumpIf(!pressingFire(), "ready");
+            // #### # 0 A_Refire();
+
+        altfire:
+            #### # 0 A_JumpIf(invoker.isOpen(), "close");
+            goto open;
+        
+        light:
+            LTRF AB random(1, 4) bright;
+        flame:
+            LTRF CDE random(4, 6) bright A_JumpIf(!invoker.isLit(), "lightdone");
+            loop;
+
+        open:
+            #### A 4 A_JumpIf(invoker.isOpen(), "nope");
+            #### # 0 {
+                invoker.openLid();
+            }
+        lidOpen:
+            #### B 4;
+            #### # 0 A_JumpIf(PressingAltFire(), "lidOpen");
+            #### # 0 A_JumpIf(PressingFire(), "fire");
+            #### CD 4;
+            goto ready;
+
+        close:
+            #### # 0 A_JumpIf(!invoker.isOpen(), "nope");
+            #### CB 4;
+            #### A 8 {
+                invoker.closeLid();
+            }
+            goto ready;        
+
+        reload:
+        altreload:
+        unload:
+        firemode:
+            goto ready;
+    }
+}
+
+class HDLighterLight : PointLightAttenuated {
+
+    private Actor followTarget;
+    private double spring, damping, offsetAngle, offsetLen, offsetZ;
+    private int inertia;
+
+    static HDLighterLight create(Actor other, HDFL_LightBeamInfo beam, HDFL_MountPoint mount, int type) {
+        let light = HDLighterLight(Spawn("HDLighterLight", other.pos, false));
+        light.followTarget = other;
+
+        let color = beam.getColor(type == 2);
+        light.args[DynamicLight.LIGHT_RED]   = color.r;
+        light.args[DynamicLight.LIGHT_GREEN] = color.g;
+        light.args[DynamicLight.LIGHT_BLUE]  = color.b;
+
+        [light.spotInnerAngle, light.spotOuterAngle, light.args[DynamicLight.LIGHT_INTENSITY]] = beam.GetRadius(type);
+
+        light.angle = other.angle;
+        light.pitch = other.pitch;
+
+        [light.spring, light.damping, light.inertia, light.offsetAngle, light.offsetLen, light.offsetZ] = mount.GetMountInfo();
+
+        light.UpdateSpotlight(other.pos, other.angle, other.pitch, false);
+
+        return light;
+    }
+
+    override void Tick() {
+        super.Tick();
+
+        // If we're being held, adjust position based on physical movement
+        if (followTarget) {
+
+            // Prevent invalid inertia values
+            inertia = max(inertia, 1);
+    
+            // TODO: allow flashlight beams being able to follow non-players
+            if (followTarget) {
+    
+                // If following a playerpawn, offset based on camera height.
+                let offZ = followTarget.player ? followTarget.player.viewZ - followTarget.pos.z : 0;
+    
+                let newAngle = followTarget.angle;
+                let newPitch = followTarget.pitch;
+    
+                UpdateSpotlight(followTarget.vec3Angle(
+                    offsetLen,
+                    newAngle + offsetAngle,
+                    offZ + offsetZ
+                ) + followTarget.vec3Angle(
+                    cos(-newPitch) * sin(-newPitch),
+                    newAngle,
+                    sin(-newPitch)
+                ) - followTarget.pos, newAngle, newPitch, getAge());
+            }
+        }
+
+    }
+
+    void UpdateSpotlight(Vector3 targetPos, double targetAngle, double targetPitch, bool interpolate = true) {
+        if (interpolate) {
+            vel += HDCore.dampedSpringVec3D(pos, targetPos, vel, spring, damping);
+
+            SetOrigin(pos + (vel / inertia), true);
+        } else {
+            SetOrigin(targetPos, false);
+        }
+
+        A_SetAngle(targetAngle, interpolate);
+        A_SetPitch(targetPitch, interpolate);
+    }
+}

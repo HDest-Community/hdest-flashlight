@@ -2,11 +2,17 @@
 
 TAG_FLASHLIGHT          = "Flashlight";
 TAG_FLOODLIGHT          = "Floodlight";
+TAG_LIGHTER             = "QuippoⓇ Brand Lighter";
 TAG_WORKLIGHT           = "Worklight";
 
 PICKUP_FLASHLIGHT       = "You picked up a flashlight.";
+PICKUP_LIGHTER          = "You picked up a QuippoⓇ Brand Lighter.";
 
 // Weapon Help
+LTRWH_FIRE              = "  Light wick\n";
+LTRWH_OPEN              = "  Open Lid\n";
+LTRWH_CLOSE             = "  Close Lid\n";
+
 FLWH_USE                = "  Toggle Flashlight On/Off\n";
 FLWH_UNLOAD             = "  Remove Battery\n";
 FLWH_RELOAD             = "  Insert Battery\n";
@@ -20,6 +26,10 @@ HDFL_MENU_TOGGLEKEY     = "Toggle Key";
 
 
 // Merchant Store Entries
+MERCH_CAT_LIGHTER       = "Joint Task Force";
+MERCH_TAG_LIGHTER       = "QuippoⓇ Brand Lighter";
+MERCH_FLAVOR_LIGHTER    = "Need a light?";
+
 MERCH_CAT_FLASHLIGHT    = "Joint Task Force";
 MERCH_TAG_FLASHLIGHT    = "Flashlight";
 MERCH_FLAVOR_FLASHLIGHT = "The clicking mechanism is really satisfying.";

@@ -4,6 +4,20 @@ class HDFL_LightBeamInfo abstract {
     abstract Color GetColor(bool secondary);
 }
 
+class HDFL_Candlelight : HDFL_LightBeamInfo {
+    override string GetName() { return "Candlelight (1800K)"; }
+    override int, int, int GetRadius(int type) {
+        switch (type) {
+            default: return 7, 35, 128;
+            case 1: return 0, 25, 64;
+            case 2: return 15, 45, 96;
+        }
+    }
+    override Color GetColor(bool secondary) {
+        return HDCore.plancksLaw(secondary ? 1800 : 2700);
+    }
+}
+
 class HDFL_Incandescent : HDFL_LightBeamInfo {
     override string GetName() { return "Incandescent (2700K)"; }
     override int, int, int GetRadius(int type) {

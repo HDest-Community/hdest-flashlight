@@ -1,4 +1,6 @@
 addBPSpawnPoolFilter => { "name": "HDFlashlight", "allowed": "#hdfl_allowBackpacks" }
+addBPSpawnPoolFilter => { "name": "HDLighter", "allowed": "#hdltr_allowBackpacks" }
 
 // Merchant Store Entries
 newMerchantStoreItem => { "enabled": "#hdm_enable_flashlight", "type": "item", "category": "$MERCH_CAT_FLASHLIGHT", "item": "HDFlashlight", "icon": "HDFLA0", "displayName": "$MERCH_TAG_FLASHLIGHT", "basePrice": "50", "flavorText": "$MERCH_FLAVOR_FLASHLIGHT" }
+newMerchantStoreItem => { "enabled": "#hdm_enable_lighter", "type": "item", "category": "$MERCH_CAT_LIGHTER", "item": "HDLighter", "icon": "LTRPA0", "displayName": "$MERCH_TAG_LIGHTER", "basePrice": "10", "flavorText": "$MERCH_FLAVOR_LIGHTER" }

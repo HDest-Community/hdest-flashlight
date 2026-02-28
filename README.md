@@ -24,6 +24,8 @@ Small mod that adds a Flashlight item that requires Cell Batteries to operate (p
 
 ### Sounds
 - mshahen: "Flashlight On/Off Clicks" (freesound.org, 271109, modified) CC BY 3.0
+- Monolith Productions: Lighter Open/Light Noises (Blood)
+- CutmanMike: Lighter Close (Ghoul's Forest)
 
 ### Testing
 - Fort of Hard Knox, a1337spy, Orange Bomb: Multiplayer flashlight testing in Hideous Destructor
@@ -33,3 +35,5 @@ Small mod that adds a Flashlight item that requires Cell Batteries to operate (p
 - Pillowblaster: Flashlight Sprite
 - XLightningStormL: Flood Lamp Sprite
 - elend: Worklight Sprites (Based on Sketchfab models by GabeTheSerrano)
+- CutmanMike: Lighter Pickup Sprite (Ghoul's Forest)
+- Monolith Productions, Joblez: Lighter HUD Sprites

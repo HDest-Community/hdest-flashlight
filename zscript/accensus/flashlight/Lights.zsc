@@ -1,16 +1,10 @@
-class HDFLSpotlight : DynamicLight {
+class HDFLSpotlight : SpotLightAttenuated {
 
     private int oldIntensity, unflickerTimer;
     private Actor followTarget;
     private double vela, velp, spring, damping, offsetAngle, offsetLen, offsetZ;
     private int inertia;
     private bool useGunPos;
-
-    Default {
-        DynamicLight.Type "Point";
-        +DYNAMICLIGHT.ATTENUATE;
-        +DYNAMICLIGHT.SPOT
-    }
 
     static HDFLSpotlight CreateBeam(Actor other, HDFL_LightBeamInfo beam, HDFL_MountPoint mount, int type) {
         let light = HDFLSpotlight(Spawn("HDFLSpotlight", other.pos, false));
@@ -77,9 +71,9 @@ class HDFLSpotlight : DynamicLight {
                 ) + followTarget.vec3Angle(
                     cos(-newPitch) * sin(-newPitch),
                     newAngle,
-                        sin(-newPitch)
-                    ) - followTarget.pos
-                );
+                    sin(-newPitch)
+                ) - followTarget.pos
+            );
 
             UpdateSpotlight(newPos, newAngle, newPitch, getAge());
         }
