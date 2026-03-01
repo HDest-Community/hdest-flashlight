@@ -26,6 +26,7 @@ class HDLighter : HDWeapon {
         Inventory.pickupMessage "$PICKUP_LIGHTER";
         HDWeapon.refId "ltr";
 
+        Radius 2;
         Scale 0.1;
     }
 
@@ -61,20 +62,18 @@ class HDLighter : HDWeapon {
         let i = super.createTossable(amt);
 
         let lighter = HDLighter(i);
-        if (lighter && lighter.isLit()) {
-
-            lighter.deactivateLight();
-            lighter.weaponStatus[LTRS_STATUS] |= LTRF_LIT;
-
-            int qual = quality.getInt();
-            let light = new('HDFL_Candlelight');
-            let mount = new('HDFL_HelmetTop');
-
-            if (!lighter.outerLight) lighter.outerLight = HDLighterLight.create(lighter, light, mount, qual == 1);
-            if (qual == 1 && !lighter.innerLight) lighter.innerLight = HDLighterLight.create(lighter, light, mount, 2);
-        }
+        if (lighter && lighter.isLit()) lighter.createTossedLight();
 
         return i;
+    }
+
+    override void collidedWith(Actor other, bool passive) {
+        super.collidedWith(other, passive);
+
+        HDActor hda = HDActor(owner);
+        if (!hda) hda = HDActor(other);
+
+        if (isLit() && hda) hda.A_Immolate(other, owner);
     }
 
     override void initializeWepStats(bool idfa) {
@@ -82,7 +81,7 @@ class HDLighter : HDWeapon {
     }
 
     override void drawHUDStuff(HDStatusBar sb, HDWeapon hdw, HDPlayerPawn hpl) {
-		sb.drawwepnum(getFuel(), TICRATE * 60 * 60);
+        sb.drawwepnum(getFuel(), TICRATE * 60 * 60);
     }
 
     override void tick() {
@@ -107,6 +106,15 @@ class HDLighter : HDWeapon {
             resetLight();
 
             oldQuality = qual;
+        }
+
+        // Light things on fire
+        let iter = BlockThingsIterator.create(self);
+        while (iter.next()) {
+            let hda = HDActor(iter.thing);
+            if (hda && ((hda.pos - pos).lengthSquared() < ((hda.radius * hda.radius) + (radius * radius))) && !random[hdflrand](0, 3)) {
+                hda.A_Immolate(hda, owner, 1);
+            }
         }
 
         // Drain some fuel
@@ -152,7 +160,13 @@ class HDLighter : HDWeapon {
 
         deactivateLight();
 
-        if (wasLit) activateLight(true);
+        if (wasLit) {
+            if (owner) {
+                activateLight(true);
+            } else {
+                createTossedLight();
+            }
+        }
     }
 
     void activateLight(bool silent = false) {
@@ -179,6 +193,24 @@ class HDLighter : HDWeapon {
 
         if (outerLight) outerLight.destroy();
         if (innerLight) innerLight.destroy();
+    }
+
+    virtual void createTossedLight() {
+
+        // Clear out any existing Dynamic Light
+        deactivateLight();
+
+        // Mark Lighter as lit
+        weaponStatus[LTRS_STATUS] |= LTRF_LIT;
+
+        // Get relevant metadata
+        int qual = quality.getInt();
+        let light = new('HDFL_Candlelight');
+        let mount = new('HDFL_HelmetTop');
+
+        // Set Lights
+        if (!outerLight) outerLight = HDLighterLight.create(self, light, mount, qual == 1);
+        if (qual == 1 && !innerLight) innerLight = HDLighterLight.create(self, light, mount, 2);
     }
 
     override void OnDestroy() {
