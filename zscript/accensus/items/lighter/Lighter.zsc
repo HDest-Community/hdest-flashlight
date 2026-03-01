@@ -333,7 +333,7 @@ class HDLighterLight : PointLightAttenuated {
 
     private Actor followTarget;
     private double spring, damping, offsetAngle, offsetLen, offsetZ;
-    private int inertia;
+    private int inertia, intensity;
 
     static HDLighterLight create(Actor other, HDFL_LightBeamInfo beam, HDFL_MountPoint mount, int type) {
         let light = HDLighterLight(Spawn("HDLighterLight", other.pos, false));
@@ -344,7 +344,7 @@ class HDLighterLight : PointLightAttenuated {
         light.args[DynamicLight.LIGHT_GREEN] = color.g;
         light.args[DynamicLight.LIGHT_BLUE]  = color.b;
 
-        [light.spotInnerAngle, light.spotOuterAngle, light.args[DynamicLight.LIGHT_INTENSITY]] = beam.GetRadius(type);
+        [light.spotInnerAngle, light.spotOuterAngle, light.intensity] = beam.GetRadius(type);
 
         light.angle = other.angle;
         light.pitch = other.pitch;
@@ -386,6 +386,7 @@ class HDLighterLight : PointLightAttenuated {
             }
         }
 
+        args[LIGHT_INTENSITY] = (sin((getAge() + frandom[hdflrand](-M_PI_2, M_PI_2)) * TICRATE * M_PI_2) * (intensity >> 4)) + intensity;
     }
 
     void UpdateSpotlight(Vector3 targetPos, double targetAngle, double targetPitch, bool interpolate = true) {
