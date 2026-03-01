@@ -49,6 +49,10 @@ class HDLighter : HDWeapon {
         ..WEPHELP_ALTFIRE..StringTable.Localize(isOpen() ? "$LTRWH_CLOSE" : "$LTRWH_OPEN");
     }
 
+	override double gunMass() {
+        return 1;
+    }
+
     override double weaponBulk() {
         return ENC_STIMPACK;
     }
