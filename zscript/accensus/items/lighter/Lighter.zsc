@@ -18,6 +18,7 @@ class HDLighter : HDWeapon {
         +Inventory.INVBAR
         +Weapon.WIMPY_WEAPON
         -HDWeapon.DROPTRANSLATION
+        +HDWeapon.REVERSEGUNINERTIA
 
         Tag "$TAG_LIGHTER";
 
