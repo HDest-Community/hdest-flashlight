@@ -23,7 +23,7 @@ class HDFLSpotlight : SpotLightAttenuated {
         [light.spring, light.damping, light.inertia, light.offsetAngle, light.offsetLen, light.offsetZ] = mount.GetMountInfo();
         light.useGunPos = mount.getName().left(3) ~== "gun";
 
-        light.UpdateSpotlight(other.pos, other.angle, other.pitch, false);
+        light.UpdateSpotlight(other.pos, other.angle, other.pitch, light.inertia, false);
 
         return light;
     }
@@ -75,7 +75,7 @@ class HDFLSpotlight : SpotLightAttenuated {
                 ) - followTarget.pos
             );
 
-            UpdateSpotlight(newPos, newAngle, newPitch, getAge());
+            UpdateSpotlight(newPos, newAngle, newPitch, max(1, useGun ? clamp(gun.gunMass() * (0.05 + (0.05 * (1.0 - hdp.strength))), Double.EPSILON, 1) : inertia), getAge());
         }
 
         if (oldIntensity > 0 && unflickerTimer-- == 0) {
@@ -84,7 +84,7 @@ class HDFLSpotlight : SpotLightAttenuated {
         }
     }
 
-    void UpdateSpotlight(Vector3 targetPos, double targetAngle, double targetPitch, bool interpolate = true) {
+    void UpdateSpotlight(Vector3 targetPos, double targetAngle, double targetPitch, double inertia, bool interpolate = true) {
         if (interpolate) {
             vel += HDCore.dampedSpringVec3D(pos, targetPos, vel, spring, damping);
 
