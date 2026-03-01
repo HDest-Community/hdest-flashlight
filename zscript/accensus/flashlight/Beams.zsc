@@ -8,9 +8,9 @@ class HDFL_Candlelight : HDFL_LightBeamInfo {
     override string GetName() { return "Candlelight (1800K)"; }
     override int, int, int GetRadius(int type) {
         switch (type) {
-            default: return 7, 35, 128;
-            case 1: return 0, 25, 64;
-            case 2: return 15, 45, 96;
+            default: return 7, 35, HDCONST_ONEMETRE;
+            case 1: return 0, 25, HDCONST_ONEMETRE * 0.5;
+            case 2: return 15, 45, HDCONST_ONEMETRE * 1.5;
         }
     }
     override Color GetColor(bool secondary) {
@@ -22,9 +22,9 @@ class HDFL_Incandescent : HDFL_LightBeamInfo {
     override string GetName() { return "Incandescent (2700K)"; }
     override int, int, int GetRadius(int type) {
         switch (type) {
-            default: return 7, 35, 256;
-            case 1: return 0, 25, 256;
-            case 2: return 15, 45, 384;
+            default: return 7, 35, HDCONST_ONEMETRE * 7;
+            case 1: return 0, 25, HDCONST_ONEMETRE * 5;
+            case 2: return 15, 45, HDCONST_ONEMETRE * 10;
         }
     }
     override Color GetColor(bool secondary) {
@@ -36,9 +36,9 @@ class HDFL_Halogen : HDFL_LightBeamInfo {
     override string GetName() { return "Halogen (3000K)"; }
     override int, int, int GetRadius(int type) {
         switch (type) {
-            default: return 5, 40, 448;
-            case 1: return 0, 20, 384;
-            case 2: return 10, 60, 512;
+            default: return 5, 40, HDCONST_ONEMETRE * 12;
+            case 1: return 0, 20, HDCONST_ONEMETRE * 10;
+            case 2: return 10, 60, HDCONST_ONEMETRE * 14;
         }
     }
     override Color GetColor(bool secondary) {
@@ -50,9 +50,9 @@ class HDFL_Fluorescent : HDFL_LightBeamInfo {
     override string GetName() { return "Fluorescent (5500K)"; }
     override int, int, int GetRadius(int type) {
         switch (type) {
-            default: return 5, 40, 448;
-            case 1: return 0, 20, 384;
-            case 2: return 10, 60, 512;
+            default: return 5, 40, HDCONST_ONEMETRE * 12;
+            case 1: return 0, 20, HDCONST_ONEMETRE * 10;
+            case 2: return 10, 60, HDCONST_ONEMETRE * 14;
         }
     }
     override Color GetColor(bool secondary) {
@@ -64,9 +64,9 @@ class HDFL_WarmLED : HDFL_LightBeamInfo {
     override string GetName() { return "Warm White LED (4000K)"; }
     override int, int, int GetRadius(int type) {
         switch (type) {
-            default: return 7, 45, 512;
-            case 1: return 0, 15, 448;
-            case 2: return 15, 75, 640;
+            default: return 7, 45, HDCONST_ONEMETRE * 14;
+            case 1: return 0, 15, HDCONST_ONEMETRE * 12;
+            case 2: return 15, 75, HDCONST_ONEMETRE * 17;
         }
     }
     override Color GetColor(bool secondary) {
@@ -78,9 +78,9 @@ class HDFL_NeutralLED : HDFL_LightBeamInfo {
     override string GetName() { return "Neutral White LED (4700K)"; }
     override int, int, int GetRadius(int type) {
         switch (type) {
-            default: return 7, 45, 512;
-            case 1: return 0, 15, 448;
-            case 2: return 15, 75, 640;
+            default: return 7, 45, HDCONST_ONEMETRE * 14;
+            case 1: return 0, 15, HDCONST_ONEMETRE * 12;
+            case 2: return 15, 75, HDCONST_ONEMETRE * 17;
         }
     }
     override Color GetColor(bool secondary) {
@@ -92,9 +92,9 @@ class HDFL_CoolLED : HDFL_LightBeamInfo {
     override string GetName() { return "Cool White LED (8000K)"; }
     override int, int, int GetRadius(int type) {
         switch (type) {
-            default: return 7, 45, 512;
-            case 1: return 0, 15, 448;
-            case 2: return 15, 75, 640;
+            default: return 7, 45, HDCONST_ONEMETRE * 14;
+            case 1: return 0, 15, HDCONST_ONEMETRE * 12;
+            case 2: return 15, 75, HDCONST_ONEMETRE * 17;
         }
     }
     override Color GetColor(bool secondary) {
